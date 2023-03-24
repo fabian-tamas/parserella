@@ -1,0 +1,40 @@
+<div class="container">
+  <div class="row">
+    <div class="col">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">
+                
+                <h4 class="alert-heading">Holy guacamole!</h4>
+                <br>
+                  <p>
+                    
+                    <strong>ERROR: </strong> {{ message }}
+                    
+                    {% if proTip %}
+                    <hr>
+                    
+                    <strong>ProTip: </strong>{{ proTip }}
+                    {% endif %}
+                  </p>
+                
+              
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        {% if error %}
+            <div class="alert alert-danger">{{error}}</div>
+        {% endif %}
+
+        {% if msg %}
+            <div class="alert alert-success">{{msg}}</div>
+        {% endif %}
+
+
+        
+    </div>
+  </div>
+</div>

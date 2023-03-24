@@ -1,0 +1,71 @@
+﻿<html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882">
+<head>
+<title>Name Creator</title>
+<style>
+
+#drop_zone {
+ background-color: lightblue;
+ border: 5px solid black;
+ display: inline-block;
+ padding: 20px;
+}
+
+
+
+</style>
+
+
+<script>
+  
+ function my_onchange(my_input,my_output,my_max){
+	my_length=document.getElementById(my_input).value.length;
+
+
+	if (my_length > my_max) { document.getElementById(my_input).style.backgroundColor="hotpink"; } else { document.getElementById(my_input).style.backgroundColor="lightgreen"; }
+
+	if (my_length == 0 )  document.getElementById(my_input).style.backgroundColor="white"; 
+
+	document.getElementById(my_output).innerHTML=my_length;
+ }
+
+function my_clear(){
+	//alert("majom")
+	document.getElementById('longname').value="";
+	document.getElementById('shortname').value="";
+	document.getElementById('oldname').value="";
+	document.getElementById('longname').style.backgroundColor="white"; 
+	document.getElementById('shortname').style.backgroundColor="white"; 
+	document.getElementById('oldname').style.backgroundColor="white"; 
+}
+</script>
+
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:_dlc_DocId msdt:dt="string">DEALOGIC-144441077-1938</mso:_dlc_DocId>
+<mso:_dlc_DocIdItemGuid msdt:dt="string">58a0cdf4-bde1-4da2-bae3-b7760fc8aa1d</mso:_dlc_DocIdItemGuid>
+<mso:_dlc_DocIdUrl msdt:dt="string">https://dealogic.sharepoint.com/Content/Research/_layouts/15/DocIdRedir.aspx?ID=DEALOGIC-144441077-1938, DEALOGIC-144441077-1938</mso:_dlc_DocIdUrl>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">Donát Ács</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>
+
+<body>
+<div>
+<div id="drop_zone">
+<form>
+<span class="description">Name: </span><span id="longsize">0</span><span>/55</span><br>
+<input type="text" id="longname" size="60" oninput="my_onchange('longname','longsize',55)"><br><br>
+
+<span class="description">Short Name: </span><span id="shortsize">0</span><span>/35</span><br>
+<input type="text" id="shortname" size="60" oninput="my_onchange('shortname','shortsize','35')"><br><br>
+
+<span class="description">Synonym / Old name: </span><span id="oldsize">0</span><span>/50</span><br>
+<input type="text" id="oldname" size="60" oninput="my_onchange('oldname','oldsize',50)"><br><br>
+<input type="button" id="clearbutton" value="Clear All" onclick="my_clear()"></form>
+</div>
+</div>
+<div style="font-style: italic">On error please contact tamas.fabian@dealogic.com</div>
+
+</body>
+</html>
+

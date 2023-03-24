@@ -1,0 +1,221 @@
+<html> 
+<head>
+
+<title>Timeline Helper & IDC USD prices</title>
+<style>
+
+h1 {
+    font-size: 1.3em;
+    margin: 0px 0px 5px 0px;
+    border-bottom: 1px solid black;
+    padding: 0 0 4px;
+}
+
+hr {
+    height:1px;
+    border-width:0;
+    color:black;
+    background-color:black;
+    margin: 10px 0px 10px 0px;
+}
+
+input {
+    margin-bottom: 5px;
+}
+
+#drop_zone {
+    background-color: lightblue;
+    border: 5px solid black;
+    display: block;
+    padding: 20px;
+    width: 600px;
+    text-align: center;
+    margin: auto auto 10px auto;
+}
+
+.sentence {
+    display: flex;
+    align-items: center; /* align vertical */
+    margin: 5px auto 5px auto;
+    padding-left: 2px;
+    min-height: 1.5em;
+    background-color: #e6adad;
+    color: black;
+    border: 1px solid black;
+    overflow: hidden;
+    user-select: all;
+}
+
+</style>
+
+<script type="text/javascript">
+    function browserEvents() {
+        document.getElementById('textbox1').addEventListener('input', nchange);
+        document.getElementById('textbox2').addEventListener('input', nchange);
+        document.getElementById('textbox3').addEventListener('input', nchange);
+        document.getElementById('textbox9').addEventListener('input', faction);
+        document.getElementById('textbox10').addEventListener('input', faction);
+    }
+
+    function idcLink() {
+        let months = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
+        let n = new Date();
+        let y = n.getFullYear();
+        let m = n.getMonth();
+        let d = ('0' + n.getDate()).slice(-2);
+        let id = document.getElementById('IDC').value;
+        if (id === '' || id === 'Enter SecID/ISIN') { return; }
+        window.open('https://360view.interactivedata.com/desktop/cgi/sec-info/sec-info.cgi?idctoken=&tuser=&secid=' + id + 
+                    '&func=IP&subf=H&day=' + d + '&mon=' + months[m] + '&year=' + y + '&x=27&y=7&freq=m&conv=d&adj=a&default_reltime=1500');
+    }
+
+    function nchange() { 
+        let first = document.getElementById("textbox1").value;
+        let second = document.getElementById("textbox2").value;
+        let third = document.getElementById("textbox3").value;
+        let ending = first + " to " + second + " on " + third + ".";
+
+        document.querySelectorAll('#textbox4, #textbox5, #textbox6, #textbox7, #textbox8').forEach(t => t.style.backgroundColor = "#ade6af");
+        textbox4.innerHTML = "The Fund changed its name from " + ending;
+        textbox5.innerHTML = "The Fund changed its Sub-Adviser from " + ending;
+        textbox6.innerHTML = "The Fund changed its Asset Manager from " + ending;
+        textbox7.innerHTML = "The Fund changed its Investment Manager from " + ending;
+        textbox8.innerHTML = "The Fund changed its Management Company from " + ending;
+
+        if (first === '' || second === '' || third === '') { 
+            textbox4.innerHTML = '';
+            textbox5.innerHTML = '';
+            textbox6.innerHTML = '';
+            textbox7.innerHTML = '';
+            textbox8.innerHTML = '';
+            document.querySelectorAll('#textbox4, #textbox5, #textbox6, #textbox7, #textbox8').forEach(t => t.style.backgroundColor = "#e6adad");
+         }
+    } 
+    
+    function faction() { 
+        let first = document.getElementById("textbox9").value;
+        let second = document.getElementById("textbox10").value;
+
+        document.querySelectorAll('#textbox11, #textbox12, #textbox13').forEach(t => t.style.backgroundColor = "#ade6af");
+        textbox11.innerHTML = "The " + first + " merged into this Fund on " + second + ".";
+        textbox12.innerHTML = "The " + first + " liquidated on " + second + ".";
+        textbox13.innerHTML = "The Fund launched on " + second + ".";
+
+        if (first === '' || second === '') {
+            textbox11.innerHTML = '';
+            textbox12.innerHTML = '';
+            textbox13.innerHTML = '';
+            document.querySelectorAll('#textbox11, #textbox12, #textbox13').forEach(t => t.style.backgroundColor = "#e6adad");
+        }
+    }
+
+    function nameSize(my_input,my_output,my_max){
+        let my_length=document.getElementById(my_input).value.length;
+
+        if (my_length > my_max) { 
+            document.getElementById(my_input).style.backgroundColor="#e6adad"; 
+        } else { 
+            document.getElementById(my_input).style.backgroundColor="#ade6af"; 
+        }
+
+        if (my_length == 0 )  document.getElementById(my_input).style.backgroundColor="white"; 
+
+        document.getElementById(my_output).innerHTML=my_length;
+    }
+
+    function nameClear(){
+        document.getElementById('longname').value="";
+        document.getElementById('shortname').value="";
+        document.getElementById('oldname').value="";
+        document.getElementById('longname').style.backgroundColor="white"; 
+        document.getElementById('shortname').style.backgroundColor="white"; 
+        document.getElementById('oldname').style.backgroundColor="white";
+        document.getElementById('oldsize').innerHTML = 0;
+        document.getElementById('shortsize').innerHTML = 0;
+        document.getElementById('longsize').innerHTML = 0;
+    }
+</script>
+
+</head> 
+<body onload="browserEvents();">
+
+<div id="drop_zone" name="IDC">
+    <h1>Go to monthly USD Prices in IDC</h1>
+    <input type="text" onfocus="this.value=''" id="IDC" name="IDC" value="Enter SecID/ISIN"><br/>
+    <input type="button" value="Go to Prices" onClick="idcLink()">
+</div>
+
+<div id="drop_zone" name="nchange">
+    <h1>Timeline changes</h1>
+
+    <label>Old Name<br/>
+        <input type="text" name="textbox1" id="textbox1" size="50" />
+    </label> <br/>
+
+    <label>New Name<br/>
+        <input type="text" name="textbox2" id="textbox2" size="50" />
+    </label> <br/>
+
+    <label>Date (eg. April 20, 2021)<br/>
+        <input type="text" name="textbox3" id="textbox3" size="50" />
+    </label>
+
+    <hr>
+    
+    <b>Name Change</b><br/>
+    <div class='sentence' name="textbox4" id="textbox4"></div>
+    
+    <b>Sub-Adviser Change</b><br/>
+    <div class='sentence' name="textbox5" id="textbox5"></div>
+
+    <b>Asset Manager Change</b><br/>
+    <div class='sentence' name="textbox6" id="textbox6"></div>
+
+    <b>Investment Manager Change</b><br/>
+    <div class='sentence' name="textbox7" id="textbox7"></div>
+
+    <b>Management Company Change</b><br/>
+    <div class='sentence' name="textbox8" id="textbox8"></div>
+</div>
+
+<div id="drop_zone" name="faction">
+    <h1>Timeline events</h1>
+
+    <label>Fund Name<br/>
+        <input type="text" name="textbox9" id="textbox9" size="50" />
+    </label> <br/>
+
+    <label>Date (eg. April 20, 2021)<br/>
+        <input type="text" name="textbox10" id="textbox10" size="50" />
+    </label>
+
+    <hr>
+
+    <b>Merger</b><br/>
+    <div class='sentence' name="textbox11" id="textbox11"></div>
+
+    <b>Liquidation</b><br/>
+    <div class='sentence' name="textbox12" id="textbox12"></div>
+
+    <b>Inception</b><br/>
+    <div class='sentence' name="textbox13" id="textbox13"></div>
+</div>
+
+<div id="drop_zone" name="nameSize">
+    <h1>Fund name helper</h1>
+    <span class="description">Name: </span><span id="longsize">0</span><span>/55</span><br>
+    <input type="text" id="longname" size="60" oninput="nameSize('longname','longsize',55)"><br>
+    
+    <span class="description">Short Name: </span><span id="shortsize">0</span><span>/35</span><br>
+    <input type="text" id="shortname" size="60" oninput="nameSize('shortname','shortsize','35')"><br>
+    
+    <span class="description">Synonym / Old name: </span><span id="oldsize">0</span><span>/50</span><br>
+    <input type="text" id="oldname" size="60" oninput="nameSize('oldname','oldsize',50)"><br>
+    <input type="button" id="clearbutton" value="Clear All" onclick="nameClear()">
+</div>
+
+<div style="font-style: italic; text-align: center">On error please contact tamas.fabian@iongroup.com or pal.szoboszlay@iongroup.com</div>
+
+</body>
+
+</html>

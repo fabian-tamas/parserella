@@ -1,0 +1,151 @@
+{% extends 'layout_parserella.html' %}
+
+{% block body %}
+
+  <div class="container">
+
+    
+
+    <div class="row">
+      <!-- Download form -->
+
+      
+      
+
+      <div class="col">
+        <!-- Download button-->
+        <button class="btn btn-success col-sm mt-2" type='button' onclick="exportTableToCSV('results.csv')">Download in .csv</button>
+        <br><br>
+      </div>
+    </div>
+      <!-- Results table-->
+      
+      
+
+     
+    <div class="row">
+      <div class="col">
+        <ul>
+          <li><b>Fundname:</b><br> {{ fundNameString }}</li>
+          <li><b>Report Date:</b><br> {{ reportDateString }}</li>
+          <li><b>CIK:</b><br> {{ regCIK }}</li>
+          <li><b>Filename:</b><br> {{ csvname }}</li>
+          <li><b>Total Assets (in xml file):</b><br> {{ totAssets }}</li>
+          <li><b>Total Market Value (counted from report):</b><br> {{ invval }}</li>
+          <li><b>From this EQUITY:</b><br> {{ eqval }}</li>
+          <li><b>From this FIXED INCOME:</b><br> {{ fival }}</li>
+          <li><b>From this OTHER INVESTMENT:</b><br> {{ otval }}</li>
+          <li><b>Number of investments:</b><br> {{ counter }}</li>
+        </ul>
+        <br>
+      </div>
+
+      
+
+      <table class="table mx-auto w-auto small">
+        <thead>
+          <tr id="download">
+              <th scope="col">Issue Name</th>
+              <th scope="col"> </th>
+              <th scope="col"> </th>
+              <th scope="col">Market Value</th>
+              <th scope="col">Share Number</th>
+              <th scope="col"> </th>
+              <th scope="col"> </th>
+              <th scope="col"> </th>
+              <th scope="col">Ticker</th>
+              <th scope="col">CUSIP</th>
+              <th scope="col">SEDOL</th>
+              <th scope="col">ISIN</th>
+              <th scope="col">Long/Short</th>
+              <th scope="col">Asset Type</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for issue, isin, share, value, ls, assetcat, tickerPlusCountry, cusip, sedol in results %}
+            <tr id="download">
+                <td>{{ issue }}</td>
+                <td> </td>
+                <td> </td>
+                <td>{{ value }}</td>
+                <td>{{ share }}</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+                <td>{{ tickerPlusCountry }}</td>
+                <td>{{ cusip }}</td>
+                <td>{{ sedol }}</td>
+                <td>{{ isin }}</td>
+                <td>{{ ls }}</td>
+                <td>{{ assetcat }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      
+    </div>
+
+    <div class="row">
+      <!-- Download form -->
+      <div class="col">
+        <!-- Download button-->
+        <button class="btn btn-success col-sm mt-2" type='button' onclick="exportTableToCSV('results.csv')">Download in .csv</button>
+        <br><br>
+      </div>
+    </div>
+
+  </div>
+  
+  <script type="text/javascript">
+    function downloadCSV(csv, filename) {
+      var csvFile;
+      var downloadLink;
+      
+
+      // CSV file
+      csvFile = new Blob([csv], {type: "text/csv"});
+
+      // Download link
+      downloadLink = document.createElement("a");
+
+      // File name
+      downloadLink.download = filename={{ csvname|tojson }};
+
+      // Create a link to the file
+      downloadLink.href = window.URL.createObjectURL(csvFile);
+
+      // Hide download link
+      downloadLink.style.display = "none";
+
+      // Add the link to DOM
+      document.body.appendChild(downloadLink);
+
+      // Click download link
+      downloadLink.click();
+    }
+  
+    function exportTableToCSV(filename) {
+      var csv = [];
+      var rows = document.querySelectorAll("#download");
+      
+      for (var i = 0; i < rows.length; i++) {
+        var row = [], cols = rows[i].querySelectorAll("td, th");
+        
+        for (var j = 0; j < cols.length; j++) 
+          row.push(cols[j].innerText);
+        
+        csv.push(row.join(","));        
+      }
+
+      // Download CSV file
+      downloadCSV(csv.join("\n"), filename);
+    }
+  </script>
+  
+  
+  
+  
+  
+  
+{% endblock %}

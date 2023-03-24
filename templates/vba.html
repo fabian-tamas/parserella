@@ -1,0 +1,3139 @@
+<html> 
+<head>
+	<title>ICMAddin generator</title>
+
+<style type="text/css">
+a{
+	color: #0069a0;
+	font-weight: bold;
+}
+
+a:hover {
+  color: red;
+}
+
+body{
+	font-size: medium;
+	font-family: Times;
+}
+
+div{
+	line-height: 1.5; 
+}
+
+hr{
+	margin-right: 8px;
+}
+
+input[type=text]{
+	background-color: #E8F3E9;
+	border: 1px solid black;
+	padding-top: 3px;
+	padding-bottom: 3px;
+	text-align: center;
+}
+
+input[type=text]:focus {
+	background-color: #CCE9ED;
+}
+
+ul {
+	margin-top: 0px;
+	margin-bottom: 0px;
+}
+
+.codes{
+	background-color:rgb(206, 206, 206);
+	font-family: monospace;
+	font-size:14px;
+}
+
+.code_snip{
+	background-color:rgb(206, 206, 206);
+	display: inline-block;
+	padding-left:10px;
+	padding-right:5px;
+	font-family: monospace;
+	font-size:14px;
+}
+
+.inputtable {
+	border-collapse: collapse;
+	margin-top: 5px;
+	margin-left: -2px;
+	table-layout: fixed;
+}
+
+.inputtable td {
+	padding: 2px;
+}
+
+.offset_table {
+    border-collapse: collapse;
+}
+
+.offset_table td {
+	text-align: center;
+	padding:0.5em;
+    border:1px solid #ccc;
+}
+
+.titles{
+	padding:0.3em 0 0.3em 0;
+	background-color:#EDD0CC;
+	font-family: Verdana;
+	font-size:15px;
+	font-weight: bold;
+	text-decoration: underline;
+}
+
+#code_div {
+	margin-top: 5px;
+	margin-left: 5px;
+	font-family: monospace;
+	font-size: 15;
+}
+
+#div_above_code {
+	background-color: #D8EADA;
+	font-size: 15px;
+}
+
+.vbaBasics_find_label {
+	display: table-cell; 
+	box-sizing: border-box; 
+	padding: 3px 13px 3px 13px;
+	text-align: center;
+	background-color: #E8F3E9;
+	border: 1px solid black;
+}
+
+#vbaBasics_find_div input[type=radio]:checked + label {
+	background-color: #EDD0CC;
+}
+
+#menu_fieldset{
+	background-color: #b5e6ba;
+	border: 0px groove #127a46;
+	display: inline-block;
+	margin-left: 0px;
+	text-align: center;
+}
+
+#yourcode {
+	background-color: #2c7731;
+	color: white;
+	padding: 5px;
+}
+
+.inputfield {
+	padding-top: 5px;
+	padding-bottom: 5px;
+	padding-left: 5px;
+}
+
+.margin_up_down {
+	margin-top: 3px;
+	margin-bottom: 3px;
+}
+
+</style>
+
+<script language="JavaScript">
+
+//ADD EVENTLISTENERS
+function browserEvents() {
+	let allClicks = document.querySelectorAll('radio, checkbox');
+	let allInputs = document.querySelectorAll('input');
+	let allSelects = document.querySelectorAll('select');
+	let bulkswapSelectElem = document.getElementById('bulkswap_select');
+	let jsInputFields = document.getElementsByClassName('js_inputfields');
+	
+	//Main menu & VBAbasics menu
+	document.getElementById('menu_main').addEventListener('change', displaySecondaryMenu);
+	sessionStorage.setItem('menu_main', 'Select');
+	sessionStorage.setItem('vbaBasics', 'Select');
+
+	//Secondary menu
+	for (let i = 0, j = jsInputFields.length; i < j; i++) {
+		jsInputFields[i].addEventListener('change', displayInputFields);
+	}
+
+	//Bulkswap if numberselector
+	bulkswapSelectElem.addEventListener('change', bulkswapDisplayInputf);
+	
+	//Every other elements
+	for (let i = 0, j = allClicks.length; i < j; i++) {
+		allClicks[i].addEventListener('click', CodesofSecondary);
+	}
+	for (let i = 0, j = allSelects.length; i < j; i++) {
+		allSelects[i].addEventListener('change', CodesofSecondary);
+	}
+	for (let i = 0, j = allInputs.length; i < j; i++) {
+		allInputs[i].addEventListener('input', CodesofSecondary);
+	}
+}
+
+//DISPLAY SECONDARY MENU
+function displaySecondaryMenu() {
+	const codeDiv = document.getElementById('code_div');
+	const mainVal = document.getElementById('menu_main').value;
+	const prevmenu = sessionStorage.getItem("menu_main")
+
+	sessionStorage.setItem('menu_main', mainVal);
+
+	if (prevmenu !== 'Select' && prevmenu !== 'menu_vbaVideos') {
+		document.getElementById(prevmenu).style.display = 'none';
+		document.getElementById(prevmenu).selectedIndex = 0;
+	} 
+
+	if (mainVal === 'Select') {
+		codeDiv.innerHTML = 'Please select!';
+		return;
+	}
+
+	if (mainVal === 'menu_vbaVideos') { return; } //no secondary videomenu
+
+	document.getElementById(mainVal).style.display = 'inline';
+
+	//	const mainMenu = document.getElementById('menu_main')
+	//	Array.from(document.querySelector('#menu_main').options).forEach((element) => {
+	//	if (element.value === 'Select') {return;}
+	//	document.getElementById(element.value).style.display = 'none';
+	//	document.getElementById(element.value).selectedIndex = 0;
+	//	});
+
+	//	for (let i = 1, j = mainMenu.length; i < j; i++) {
+	//				document.getElementById(mainMenu.options[i].value).style.display = 'none';
+	//				document.getElementById(mainMenu.options[i].value).selectedIndex = 0;
+	//	}
+
+}
+
+//DISPLAY VBA CODES
+function CodesofSecondary() {
+	resetValidations(); //reset the color of inputfields before any other function
+
+	const codeDiv = document.getElementById('code_div');
+	const mainVal = document.getElementById('menu_main').value;
+
+	//Get the selected index of the secondary menu
+	const icmGenVal = document.getElementById('menu_ICM_gen').value;
+	const icmInfo2bVal = document.getElementById('menu_ICM_info2b').value;
+	const icmMainVal = document.getElementById('menu_ICM_main').value;
+	const icmMoreCleanVal = document.getElementById('menu_ICM_moreclean').value;
+	const icmMultilineVal = document.getElementById('menu_ICM_multiline').value;
+	const icmNavVal = document.getElementById('menu_ICM_nav').value;
+	const icmNonusVal = document.getElementById('menu_ICM_nonus').value;
+	const icmStepbyVal = document.getElementById('menu_ICM_step').value;
+	const icmSpecialVal = document.getElementById('menu_ICM_special').value;
+	const icmWorkVal = document.getElementById('menu_ICM_work').value;
+	const icmVBAVal = document.getElementById('menu_vbaBasics').value;
+	const mqCbox = document.getElementById('mq_universal');
+	let mqstart = '';
+	let mqpar = '';
+	let mqcomma = ' ';
+
+	if (mqCbox.checked) {
+		mqstart = 'Application.Run "ICMaddin.xlam!';
+		mqpar = '"';
+		mqcomma = '", ';
+	}
+	//Dictionaries went into this switch statement so
+	//js wouldn't run every function all the time something changed
+
+	switch(mainVal) {
+		case 'menu_ICM_gen':
+			const icmGenCodes = {
+			'Select': 'Please Select Macro',
+			'ICM_clearall': mqstart + 'ICM_clearall' + mqpar,
+			'ICM_copy2RFL': icmCopy2rflCode(),
+			'ICM_double': icmDouble(),
+			'ICM_paste': mqstart + 'ICM_paste' + mqpar,
+			'ICM_proper': mqstart + 'ICM_proper' + mqpar,
+			'ICM_shiftleft': mqstart + 'ICM_shiftleft' + mqpar,
+			'ICM_souper_filter': icmSouperFilterCode()
+			};
+
+			codeDiv.innerHTML = icmGenCodes[icmGenVal];
+			break;
+		case 'menu_ICM_info2b':
+			const icmInfo2Codes = {
+			'Select': 'Please Select Macro',
+			'ICM_IssuePrice': mqstart + 'ICM_IssuePrice' + mqpar,
+			'ICM_IssueType': mqstart + 'ICM_IssueType' + mqpar
+			};
+
+			codeDiv.innerHTML = icmInfo2Codes[icmInfo2bVal];
+			break;
+		case 'menu_ICM_main':
+			const icmMainCodes = {
+			'Select': 'Please Select Macro',
+			'Macro': '\'Ideally you only need these in your macro:<br/>' + mqstart + 'ICM_divide' + mqpar + 
+				'<br/>' + mqstart + 'ICM_addzeroes' + mqpar + '<br/>' + mqstart + 'ICM_proper' + mqpar + '<br/>' + mqstart + 
+				'ICM_count' + mqpar + '<br/>' + mqstart + 'ICM_IssueType' + mqpar + '<br/>\'You should swap and replace programmatically (bulkswap/swap columns auto)<br/>\'Instead of displaying inputfields',
+			'All': 'Dim wb As Workbook<br/>Set wb = ActiveWorkbook<br/>' + mqstart + 'ICM_swapcolumns' + mqpar + 
+				'<br/>If f_ICM_swapcolumns.TextBox1.Value = "" Then Exit Sub<br/>' + mqstart + 'ICM_addzeroes' + mqpar + '<br/>' + mqstart + 
+				'ICM_replace' + mqpar + '<br/>wb.Activate<br/>' + mqstart + 'ICM_proper' + mqpar + '<br/>' + mqstart + 'ICM_count' + mqpar,
+			'All1000': 'Dim wb As Workbook<br/>Set wb = ActiveWorkbook<br/>' + mqstart + 'ICM_swapcolumns' + mqpar + '<br/>If f_ICM_swapcolumns.TextBox1.Value = "" Then Exit Sub<br/>' 
+				+ mqstart + 'ICM_divide' + mqpar + '<br/>' + mqstart + 'ICM_addzeroes' + mqpar + '<br/>' + mqstart + 'ICM_replace' + mqpar + '<br/>wb.Activate<br/>' + mqstart + 
+				'ICM_proper' + mqpar + '<br/>' + mqstart + 'ICM_count' + mqpar + '<br/>Application.OnUndo "Undo Divide", "ICM_UndoDivide"<br/><br/>' +
+				'\'The last row won\'t work in MQaddin',
+			'Copyto': 'If ActiveWorkbook.Name = "RawFileLoader.xlsx" Then<br/>MsgBox("This function can\'t be used in RawFileLoader")<br/>Exit Sub<br/>End If<br/>' +
+				'<br/>' + mqstart + 'ICM_copy2RFL' + mqcomma + 'True \'true=close<br/>' + mqstart + 'ICM_swapcolumns' + mqpar + '<br/>' + mqstart + 
+				'ICM_divide' + mqpar + '</br>' + mqstart + 'ICM_addzeroes' + mqpar + '<br/>' + mqstart + 'ICM_replace' + mqpar + '<br/>' 
+				+ mqstart + 'ICM_proper' + mqpar + '<br/>' + mqstart + 'ICM_count' + mqpar + '<br/>' + mqstart + 'ICM_CopyToTemp' + mqpar
+			};
+
+			codeDiv.innerHTML = icmMainCodes[icmMainVal];
+			break;
+		case 'menu_ICM_moreclean':
+			const icmMorecleanCodes = {
+			'Select': 'Please Select Macro',
+			'countries': mqstart + 'ICM_delete_list' + mqcomma + '"countrylist"' + icmMorecleanCode(),
+			'currencies': mqstart + 'ICM_delete_list' + mqcomma + '"currencylist"' + icmMorecleanCode(),
+			'industries': mqstart + 'ICM_delete_list' + mqcomma + '"industrylist"' + icmMorecleanCode()
+			};
+
+			codeDiv.innerHTML = icmMorecleanCodes[icmMoreCleanVal];
+			break;
+		case 'menu_ICM_multiline':
+			const icmMultilineCodes = {
+			'Select': 'Please Select Macro',
+			'ICM_multiline_highlight': icmMultilineCode(),
+			'ICM_multiline_highlight_inverted': icmMultilineCode(),
+			'ICM_multiline_highlight_X': icmMultilineCode()
+			};
+
+			codeDiv.innerHTML = icmMultilineCodes[icmMultilineVal];
+			break;
+		case 'menu_ICM_nav':
+			const icmNavCodes = {
+			'Select': 'Please Select Macro',
+			'ICM_nav': mqstart + 'ICM_nav' + mqpar,
+			'Add4Zeroes': mqstart + 'ICM_addzeroes_NAV'+ mqpar
+			};
+
+			codeDiv.innerHTML = icmNavCodes[icmNavVal];
+			break;
+		case 'menu_ICM_nonus':
+			const icmNonusCodes = {
+			'Select': 'Please Select Macro',
+			'Dollar': mqstart + 'ICM_currency_show_form' + mqpar,
+			'DollarAuto': icmNonusDisplayAndCode(),
+			'DollarManual': icmNonusDisplayAndCode(),
+			'Convert': icmNonusConvertCode()
+			};
+
+			codeDiv.innerHTML = icmNonusCodes[icmNonusVal];
+			break;
+		case 'menu_ICM_step':
+			const icmStepbyCodes = {
+			'Select': 'Please Select Macro',
+			'ICM_addzeroes': mqstart + 'ICM_addzeroes' + mqpar,
+			'ICM_bulkswap': 'f_ICM_bulkswap.Show',
+			'Code_bulkswap': bulkswapCode(),
+			'ICM_count': mqstart + 'ICM_count' + mqpar,
+			'ICM_divide': mqstart + 'ICM_divide' + mqpar,
+			'ICM_replace': mqstart + 'ICM_replace' + mqpar,
+			'ICM_swapcolumns': mqstart + 'ICM_swapcolumns' + mqpar,
+			'ICM_swapcolumns_internal': icmSwapcolInternalCode()
+			};
+
+			codeDiv.innerHTML = icmStepbyCodes[icmStepbyVal];
+			break;
+		case 'menu_ICM_special':
+			const icmSpecialCodes = {
+			'Select': 'Please Select Macro',
+			'ICM_R_divideNEW100': mqstart + 'ICM_R_divideNEW100' + mqpar,
+			'ICM_companyEndingCorrecter': mqstart + 'ICM_companyEndingCorrecter' + mqpar,
+			'ICM_deleteRowsWithPercentage': mqstart + 'ICM_deleteRowsWithPercentage' + mqpar,
+			'ICM_duplicate_rem': mqstart + 'ICM_duplicate_rem' + mqpar,
+			'ICM_columnABracketsToB': mqstart + 'ICM_columnABracketsToB' + mqpar,
+			'ICM_ISIN_split': mqstart + 'ICM_ISIN_split' + mqpar,
+			'OpenCSV': mqstart + 'OpenCSV' + mqpar + '<br><br>Or: loaded = LoadCsvIntoArray(FILEPATH)' + 
+				'<br>In MQaddin: loaded = Application.Run("ICMaddin.xlam!LoadCsvIntoArray", FILEPATH)',
+			'ICM_removeSheetPass': mqstart + 'ICM_removeSheetPass' + mqpar,
+			'ICM_Tickerending': mqstart + 'ICM_Tickerending' + mqpar,
+			'ICM_tickerEndingReplacer': mqstart + 'ICM_tickerEndingReplacer' + mqpar,
+			'ICM_Compare_Mapped': icmCompareMappedCode(),
+			'Map_IDs': icmMapCode(),
+			'Map_Presets': icmMapPresetCode()
+			};
+
+			codeDiv.innerHTML = icmSpecialCodes[icmSpecialVal];
+			break;
+		case 'menu_ICM_work':
+			const icmWorkCodes = {
+			'Select': 'Please Select Macro',
+			'Reset': mqstart + 'ICM_ResetWorkbook' + mqpar,
+			'Copy': mqstart + 'ICM_CopyToTemp' + mqpar,
+			};
+
+			codeDiv.innerHTML = icmWorkCodes[icmWorkVal];
+			break;
+		case 'menu_vbaBasics':
+			const vbaCodes = {
+			'div_snip_bulkswap': bulkswapCode(),
+			'vbaBasics_dynamic_div': dynamicRangeDisplayandCode(),
+			'vbaBasics_find_div': findReplaceDisplayAndCode(),
+			'vbaBasics_numberf_div': numberformatDisplayAndCode(),
+			'vbaBasics_conditions_div': vbaIfConditions()
+			};
+
+			if (icmVBAVal === 'vbaBasics_numberf_div' || icmVBAVal === 'vbaBasics_find_div' 
+			|| icmVBAVal === 'vbaBasics_dynamic_div' || icmVBAVal === 'div_snip_bulkswap' 
+			|| icmVBAVal === 'vbaBasics_conditions_div') {
+				codeDiv.innerHTML = vbaCodes[icmVBAVal];
+			} else {
+				codeDiv.innerHTML = '';
+			}
+			break;
+		case 'menu_vbaVideos':
+			codeDiv.innerHTML = '';
+	}
+
+	//Validate inputfields
+	validateLetters();
+	validateNumbers();
+}
+
+//DISPLAY INPUTFIELD DIVs
+function displayInputFields() {
+	const icmGenVal = document.getElementById('menu_ICM_gen').value;
+	const icmMorecleanVal = document.getElementById('menu_ICM_moreclean').value;
+	const icmMultilineVal = document.getElementById('menu_ICM_multiline').value;
+	const icmNonusVal = document.getElementById('menu_ICM_nonus').value;
+	const icmSpecVal = document.getElementById('menu_ICM_special').value;
+	const icmStepVal = document.getElementById('menu_ICM_step').value;
+	const mainmenu = document.getElementById('menu_main').value;
+	const vbaSelectVal = document.getElementById('menu_vbaBasics').value;
+
+	//Display 'Here's your code:'
+	if (mainmenu === 'menu_vbaBasics' || mainmenu === 'menu_vbaVideos') {
+		document.getElementById('mq_label').style.display = 'none';
+	} else {
+		document.getElementById('mq_label').style.display = 'block';
+	}
+
+	if (mainmenu === 'menu_vbaBasics') {
+		document.getElementById('yourcode').style.display = 'none';
+		if (vbaSelectVal === 'vbaBasics_numberf_div' || vbaSelectVal === 'vbaBasics_find_div' 
+			|| vbaSelectVal === 'vbaBasics_dynamic_div' || vbaSelectVal === 'div_snip_bulkswap') {
+			document.getElementById('yourcode').style.display = 'block';
+		}
+	} else {
+		document.getElementById('yourcode').style.display = 'block';
+	}
+
+	if (mainmenu === 'menu_vbaVideos') {
+		document.getElementById('vba_videos_div').style.display = 'block';
+		document.getElementById('yourcode').style.display = 'none';
+	} else {
+		document.getElementById('yourcode').style.display = 'block';
+		document.getElementById('vba_videos_div').style.display = 'none';
+	}
+
+	//Display inputfield if:
+	if (icmGenVal === 'ICM_copy2RFL') {
+		document.getElementById('div_ICM_copy2RFL').style.display = 'block';
+	} else {
+		document.getElementById('div_ICM_copy2RFL').style.display = 'none';
+	}
+
+	if (icmGenVal === 'ICM_double') {
+		document.getElementById('div_ICM_double').style.display = 'block';
+	} else {
+		document.getElementById('div_ICM_double').style.display = 'none';
+	}
+
+	if (icmGenVal === 'ICM_souper_filter') {
+		document.getElementById('div_ICM_souper').style.display = 'block';
+	} else {
+		document.getElementById('div_ICM_souper').style.display = 'none';
+	}
+
+	if (icmSpecVal === 'ICM_Compare_Mapped') {
+		document.getElementById('div_ICM_compare_mapped').style.display = 'block';
+	} else {
+		document.getElementById('div_ICM_compare_mapped').style.display = 'none';
+	}
+
+	if (icmSpecVal === 'Map_IDs') {
+		document.getElementById('div_ICM_map').style.display = 'block';
+	} else {
+		document.getElementById('div_ICM_map').style.display = 'none';
+	}
+
+	if (icmSpecVal === 'Map_Presets') {
+		document.getElementById('div_spec_map').style.display = 'block';
+	} else {
+		document.getElementById('div_spec_map').style.display = 'none';
+	}
+
+	if (icmStepVal === 'ICM_swapcolumns_internal') {
+		document.getElementById('div_ICM_swapcol').style.display = 'block';
+	} else {
+		document.getElementById('div_ICM_swapcol').style.display = 'none';
+	}
+
+	if (icmStepVal === 'Code_bulkswap') {
+		document.getElementById('div_snip_bulkswap').style.display = 'block';
+	} else {
+		document.getElementById('div_snip_bulkswap').style.display = 'none';
+	}
+
+	if (icmMorecleanVal !== 'Select') {
+		document.getElementById('div_ICM_moreclean').style.display = 'block';
+	} else {
+		document.getElementById('div_ICM_moreclean').style.display = 'none';
+	}
+
+	if (icmMultilineVal !== 'Select') {
+		document.getElementById('div_ICM_multiline').style.display = 'block';
+	} else {
+		document.getElementById('div_ICM_multiline').style.display = 'none';
+	}
+
+	if (icmNonusVal === 'DollarAuto' || icmNonusVal === 'DollarManual') {
+		document.getElementById('div_ICM_nonus_curr').style.display = 'block';
+	} else {
+		document.getElementById('div_ICM_nonus_curr').style.display = 'none';
+	}
+
+	if (icmNonusVal === 'Convert') {
+		document.getElementById('div_ICM_nonus_convert').style.display = 'block';
+	} else {
+		document.getElementById('div_ICM_nonus_convert').style.display = 'none';
+	}
+
+	//VBA Code
+	const prevVbaSelectVal = sessionStorage.getItem('vbaBasics')
+
+	sessionStorage.setItem('vbaBasics', vbaSelectVal);
+
+	if (prevVbaSelectVal !== 'Select') {
+		document.getElementById(prevVbaSelectVal).style.display = 'none';
+	} 
+
+	if (vbaSelectVal === 'Select') {
+		return;
+	}
+
+	document.getElementById(vbaSelectVal).style.display = 'block';
+}
+
+//BULKSWAP INPUTFIELDS
+function bulkswapDisplayInputf() {
+	const bulkswapIdx = document.getElementById('bulkswap_select').selectedIndex;
+	const bulkswapInputTable = document.getElementById('bulkswap_inputt');
+	
+	if (bulkswapIdx === 0) {
+		document.getElementById('div_bulkswap_selected').style='display: none';
+	} else {
+		document.getElementById('div_bulkswap_selected').style='display: block';
+	}
+
+	while (bulkswapInputTable.childNodes.length > 2) {
+		bulkswapInputTable.removeChild(bulkswapInputTable.lastChild);
+	}
+
+	//Create the inputtable
+	for (let i = 0; i < bulkswapIdx; i++) {
+		const bulkswapInputRow = document.createElement('tr');
+		const bulkswapInputCell1 = document.createElement('td');
+		const bulkswapInputCell2 = document.createElement('td');
+		const bulkswapInputFromTbox = document.createElement('input');
+			bulkswapInputFromTbox.addEventListener('input', CodesofSecondary);
+			bulkswapInputFromTbox.className = 'is_letter';
+			bulkswapInputFromTbox.id = 'bulkswap_input_from_tbox'+i;
+			bulkswapInputFromTbox.maxLength = 1;
+			bulkswapInputFromTbox.name = 'fromcolumn' + i;
+			bulkswapInputFromTbox.size = 9;
+			bulkswapInputFromTbox.type = 'text';
+		const bulkswapInputToTbox = document.createElement('input');
+			bulkswapInputToTbox.addEventListener('input', CodesofSecondary);
+			bulkswapInputToTbox.className = 'is_letter';
+			bulkswapInputToTbox.id = 'bulkswap_input_to_tbox'+i;
+			bulkswapInputToTbox.maxLength = 1;
+			bulkswapInputToTbox.name = 'tocolumn' + i;
+			bulkswapInputToTbox.size = 9;
+			bulkswapInputToTbox.type = 'text';
+			bulkswapInputTable.appendChild(bulkswapInputRow);
+		bulkswapInputRow.appendChild(bulkswapInputCell1);
+		bulkswapInputRow.appendChild(bulkswapInputCell2);
+		bulkswapInputCell1.appendChild(bulkswapInputFromTbox);
+		bulkswapInputCell2.appendChild(bulkswapInputToTbox);
+	}
+}
+
+//BULKSWAP CODE
+function bulkswapCode() {
+	const bulkswapClearCheck = document.getElementById('bulkswap_clear_cbox');
+	const bulkswapCopyCheck = document.getElementById('bulkswap_copy_radio');
+	const bulkswapCutCheck = document.getElementById('bulkswap_cut_radio');
+	const bulkswapIdx = document.getElementById('bulkswap_select').selectedIndex;
+
+	//Arrays for output
+	const bswapArr2sheetLines = [];
+	const bswapArrLines = [];
+	const bswapClearLines = "Cells.Clear<br>'Redefine Numberformat of column(s) below<br><br>";
+	const bswapCopyLines = [];
+	const bswapCutLines = [];
+	const bswapDimArrLines = [];
+	const bswapDimLrowLines = [];
+	const bswapLrowLines = [];
+
+	//Variables for duplicates & when to display
+	let bulkswapDuplicate = false;
+	let isReady = false;
+
+	if (bulkswapIdx === 0 || document.body.contains(document.getElementById('bulkswap_input_from_tbox0')) === false) {
+		return null;
+	}
+
+	//Display radios
+	if (bulkswapClearCheck.checked === true) {
+		document.getElementById('bulksw_inputf').style.display = 'none';
+	} else {
+		document.getElementById('bulksw_inputf').style.display = 'block';
+	}
+
+	//Populate arrays
+	for (let i = 0; i < bulkswapIdx; i++) {
+		//Concat
+		const bulkswapFrom = document.getElementById('bulkswap_input_from_tbox' + i).value.toUpperCase();
+		const bulkswapTo = document.getElementById('bulkswap_input_to_tbox' + i).value.toUpperCase();
+		const bulkswapArr = 'arr' + bulkswapFrom + '2' + bulkswapTo; //e.g. arrA2B
+		const bulkswapLrow = 'lRow' + bulkswapFrom + '2' + bulkswapTo; //e.g. lRowA2B
+
+		//If there's empty field in a line, exit loop
+		if (bulkswapFrom === '' || bulkswapTo === '') {
+			i = bulkswapIdx;
+		} else {
+			bswapDimArrLines.push('Dim ' + bulkswapArr + ' As Variant');
+			bswapDimLrowLines.push('Dim ' + bulkswapLrow + ' As Long');
+			bswapLrowLines.push(bulkswapLrow + ' = Cells(Cells.Rows.Count, "' + bulkswapFrom + '").End(xlUp).Row');
+			bswapArrLines.push(bulkswapArr + ' = Range("' + bulkswapFrom + '1:' + bulkswapFrom + '" & ' + bulkswapLrow+')');
+			bswapCopyLines.push('Columns("' + bulkswapTo + ':' + bulkswapTo + '").Clear');
+			bswapCutLines.push('Columns("' + bulkswapFrom + ':' + bulkswapFrom + '").Clear');
+			bswapArr2sheetLines.push('Range("' + bulkswapTo + '1:' + bulkswapTo + '" & ' + bulkswapLrow + ').Value = ' + bulkswapArr);
+			isReady = true;
+		}
+	}
+
+	//Join array elements by line break
+	const afterClears = bswapArr2sheetLines.join('<br>');
+	const beforeClears = bswapDimArrLines.join('<br>') + '<br><br>' + bswapDimLrowLines.join('<br>') + '<br><br>' + bswapLrowLines.join('<br>') + '<br><br>' + bswapArrLines.join('<br>') + '<br><br>';
+	const copyClears = bswapCopyLines.join('<br>') + '<br><br>';
+	const cutClears = bswapCutLines.join('<br>') + '<br><br>';
+
+	//Check for duplicates
+	for (let i = 0, j = bswapDimArrLines.length; i < j; i++) {
+		for (let h = 0; h < j; h++) {
+		const bulkswapInputFromTbox = document.getElementById('bulkswap_input_from_tbox' + h);
+		const bulkswapInputToTbox = document.getElementById('bulkswap_input_to_tbox' + h);
+			if (i !== h && bswapDimArrLines[i] === bswapDimArrLines[h]) {
+				bulkswapInputFromTbox.style.backgroundColor = '#EDD0CC';
+				bulkswapInputToTbox.style.backgroundColor = '#EDD0CC';
+				bulkswapDuplicate = true;
+			}
+		}
+	}
+
+	//If duplicate, return null
+	if (bulkswapDuplicate === true) {
+		alert('Please remove duplicates!');
+		return null;
+	} 
+
+	if (isReady === false) { return null; }
+
+	//Check whether clear/copy/cut and return output if isReady true
+	if (bulkswapClearCheck.checked === true) {
+		return (beforeClears + bswapClearLines + afterClears);
+	} else {
+		if (bulkswapCopyCheck.checked === true) {
+			return (beforeClears + copyClears + afterClears);
+		} else if (bulkswapCutCheck.checked === true) {
+			return (beforeClears + cutClears + copyClears + afterClears);
+		}
+	}
+}
+
+//COMPARE MAPPED CODE
+function icmCompareMappedCode() {
+	const compareVal = document.getElementById('compare_mapped_tbox').value.toUpperCase();
+	const mqCbox = document.getElementById('mq_universal');
+	let mqstart = '';
+	let mqcomma = ' ';
+	if (mqCbox.checked) {
+		mqstart = 'Application.Run "ICMaddin.xlam!';
+		mqcomma = '", ';
+	}
+
+	if (compareVal === '') { return ''; }
+
+	if (compareVal === 'A') {
+		alert('A is not a valid column letter, as the mapped company names should be there.');
+		return null;
+	}
+
+	return mqstart + 'ICM_Compare_Mapped' + mqcomma + '"' + compareVal + '"';
+}
+
+//CONVERT NUMBERS CODE
+function icmNonusConvertCode() {
+	const convertVal = document.getElementById('convert_tbox').value.toUpperCase();
+	const mqCbox = document.getElementById('mq_universal');
+	let mqstart = '';
+	let mqcomma = ' ';
+	if (mqCbox.checked) {
+		mqstart = 'Application.Run "ICMaddin.xlam!';
+		mqcomma = '", ';
+	}
+
+	if (convertVal === '') { return null; }
+
+	return mqstart + 'ICM_convert_eu_numbers' + mqcomma + 'Range("' + convertVal + ':' + convertVal + '")';
+}
+
+//Double to Single CODE
+function icmDouble() {
+	const doubleVal = document.getElementById('double_tbox').value.toUpperCase();
+	const mqCbox = document.getElementById('mq_universal');
+	let mqstart = '';
+	let mqcomma = ' ';
+	if (mqCbox.checked) {
+		mqstart = 'Application.Run "ICMaddin.xlam!';
+		mqcomma = '", ';
+	}
+
+	if (doubleVal === '') { return null; }
+
+	return mqstart + 'ICM_double2single' + mqcomma + 'Range("' + doubleVal + ':' + doubleVal + '").Column';
+}
+
+//DYNAMIC LAST/FIRST CELL FINDER
+function dynamicRangeDisplayandCode() {
+	const lookingForIdx = document.getElementById('dyn_range_first_select').selectedIndex;
+	const lrowFromIdx = document.getElementById('dynr_lrow_from_select').selectedIndex;
+	const lcolFromIdx = document.getElementById('dynr_lcol_from_select').selectedIndex;
+
+	//Display of main selection
+	if (lookingForIdx === 1) {
+		document.getElementById('dyn_range_last_row_div').style.display = 'block';
+	} else {
+		document.getElementById('dyn_range_last_row_div').style.display = 'none';
+	}
+
+	if (lookingForIdx === 2) {
+		document.getElementById('dyn_range_last_col_div').style.display = 'block';
+	} else {
+		document.getElementById('dyn_range_last_col_div').style.display = 'none';
+	}
+
+	if (lookingForIdx === 3) {
+		document.getElementById('dyn_sheet_row_div').style.display = 'block';
+	} else {
+		document.getElementById('dyn_sheet_row_div').style.display = 'none';
+	}
+
+	//Display of secondary selection
+	if (lrowFromIdx === 2 || lrowFromIdx === 3) {
+		document.getElementById('dynr_lrow_row_div').style.display = 'block';
+	} else {
+		document.getElementById('dynr_lrow_row_div').style.display = 'none';
+	}
+
+	if (lcolFromIdx === 2 || lcolFromIdx === 3) {
+		document.getElementById('dynr_lcol_col_div').style.display = 'block';
+	} else {
+		document.getElementById('dynr_lcol_col_div').style.display = 'none';
+	}
+
+	//Last non-empty cell in row codes
+	const lrowColVal = document.getElementById('dynr_lrow_col_tbox').value.toUpperCase();
+	const lrowRowVal = document.getElementById('dynr_lrow_row_tbox').value;
+	const lrowCellRadio = document.getElementById('dynr_lrow_cell_radio');
+	const lrowRowRadio = document.getElementById('dynr_lrow_row_radio');
+	let lrowNumber;
+		if (lrowCellRadio.checked === true) {
+			lrowNumber = '';
+		} else if (lrowRowRadio.checked === true) {
+			lrowNumber = '.Row';
+		}
+
+	const lrowOut = [];
+		lrowOut[0] = '';
+		lrowOut[1] = 'Cells(Cells.Rows.Count, "' + lrowColVal + '").End(xlUp)' + lrowNumber;
+		lrowOut[2] = 'Cells(' + lrowRowVal + ', "' + lrowColVal + '").End(xlDown)' + lrowNumber;
+		lrowOut[3] = 'Cells(' + lrowRowVal + ', "' + lrowColVal + '").End(xlUp)' + lrowNumber;
+
+	//Last non-empty cell in column codes
+	const lcolColVal = document.getElementById('dynr_lcol_col_tbox').value.toUpperCase();
+	const lcolRowVal = document.getElementById('dynr_lcol_row_tbox').value;
+	const lcolCellRadio = document.getElementById('dynr_lcol_cell_radio');
+	const lcolColumnRadio = document.getElementById('dynr_lcol_col_radio');
+	let lcolNumber;
+		if (lcolCellRadio.checked === true) {
+			lcolNumber = '';
+		} else if (lcolColumnRadio.checked === true) {
+			lcolNumber = '.Column';
+		}
+
+	const lcolOut = [];
+		lcolOut[0] = '';
+		lcolOut[1] = 'Cells(' + lcolRowVal + ', Cells.Columns.Count).End(xlToLeft)' + lcolNumber;
+		lcolOut[2] = 'Cells(' + lcolRowVal + ', "' + lcolColVal + '").End(xlToLeft)' + lcolNumber;
+		lcolOut[3] = 'Cells(' + lcolRowVal + ', "' + lcolColVal + '").End(xlToRight)' + lcolNumber;
+
+	//Last/First non-empty cell in sheet codes
+	const sheetlCol = document.getElementById('dynr_sheet_lcol');
+	const sheetlCel = document.getElementById('dynr_sheet_lrow_lcel');
+	const sheetlRow = document.getElementById('dynr_sheet_lrow');
+	const sheetfCol = document.getElementById('dynr_sheet_fcol');
+	const sheetfCel = document.getElementById('dynr_sheet_frow_fcel');
+	const sheetfRow = document.getElementById('dynr_sheet_frow');
+	const sheetrowOut1 = 'Cells.Find(What:="*", _<br>After:=Range("A1"), _<br>LookAt:=xlPart, _<br>LookIn:=xlValues, _<br>SearchOrder:=xlByRows, _<br>SearchDirection:=xlPrevious, _<br>MatchCase:=False).Row';
+	const sheetrowOut2 = 'Cells.Find(What:="*", _<br>After:=Range("A1"), _<br>LookAt:=xlPart, _<br>LookIn:=xlValues, _<br>SearchOrder:=xlByColumns, _<br>SearchDirection:=xlPrevious, _<br>MatchCase:=False).Column';
+	const sheetrowOut3 = 'Dim veryLastRow as Long<br><br>Dim veryLastCol as Long<br><br>veryLastRow = ' + sheetrowOut1 + '<br><br>' + 'veryLastCol = ' + sheetrowOut2 + '<br><br>\'This is the last cell:<br>Cells(veryLastRow, veryLastCol)';
+	const sheetrowOut4 = 'Cells.Find(What:="*", _<br>After:=Range("A1"), _<br>LookAt:=xlPart, _<br>LookIn:=xlValues, _<br>SearchOrder:=xlByRows, _<br>SearchDirection:=xlNext, _<br>MatchCase:=False).Row';
+	const sheetrowOut5 = 'Cells.Find(What:="*", _<br>After:=Range("A1"), _<br>LookAt:=xlPart, _<br>LookIn:=xlValues, _<br>SearchOrder:=xlByColumns, _<br>SearchDirection:=xlNext, _<br>MatchCase:=False).Column';
+	const sheetrowOut6 = 'Dim veryFirstRow as Long<br><br>Dim veryFirstCol as Long<br><br>veryFirstRow = ' + sheetrowOut4 + '<br><br>' + 'veryFirstCol = ' + sheetrowOut5 + '<br><br>\'This is the first cell:<br>Cells(veryFirstRow, veryFirstCol)';
+
+	//Codes to return
+	switch(lookingForIdx) {
+		case 0:
+			return null;
+		case 1:
+			if (lrowColVal === '' || lrowFromIdx === 0) { return null; }
+			if (lrowFromIdx === 1) { return lrowOut[1]; } 
+			//if (lrowFromIdx === 2 || lrowFromIdx === 3)
+			if (lrowRowVal === '') { return null;}
+			return lrowOut[lrowFromIdx];
+		case 2:
+			if (lcolRowVal === '' || lcolFromIdx === 0) { return null; }
+			if (lcolFromIdx === 1) { return lcolOut[1]; } 
+			//if (lcolFromIdx === 2 || lcolFromIdx === 3)
+			if (lcolColVal === '') { return null; }
+			return lcolOut[lcolFromIdx];
+		case 3:
+			if (sheetlRow.checked === true) {
+				return sheetrowOut1;
+			} else if (sheetlCol.checked === true) {
+				return sheetrowOut2;
+			} else if (sheetlCel.checked === true) {
+				return sheetrowOut3;
+			} else if (sheetfRow.checked === true) {
+				return sheetrowOut4;
+			} else if (sheetfCol.checked === true) {
+				return sheetrowOut5;
+			} else if (sheetfCel.checked === true) {
+				return sheetrowOut6;
+			} 
+	}
+}
+
+//FIND OR REPLACE
+function findReplaceDisplayAndCode(){
+	const findRadio = document.getElementById('findrep_find_radio');
+	const replaceRadio = document.getElementById('findrep_replace_radio');
+
+	const findDiv = document.getElementById('findrep_find_div');
+	const findTbox = document.getElementById('findrep_find_tbox').value;
+	const findCase = document.getElementById('findrep_find_case_cbox');
+	const findEntire = document.getElementById('findrep_find_entire_cbox');
+	let findLookat;
+	let findMatchcase;
+
+	const repDiv = document.getElementById('findrep_rep_div');
+	const repWhatTbox = document.getElementById('findrep_rep_what_tbox').value;
+	const repWithTbox = document.getElementById('findrep_rep_with_tbox').value;
+	const repCase = document.getElementById('findrep_rep_case_cbox');
+	const repEntire = document.getElementById('findrep_rep_entire_cbox');
+	let repLookat;
+	let repMatchcase;
+
+	//Display div
+	if (findRadio.checked === true) {
+		findDiv.style.display = 'block';
+	} else {
+		findDiv.style.display = 'none';
+	}
+
+	if (replaceRadio.checked === true) {
+		repDiv.style.display = 'block';
+	} else {
+		repDiv.style.display = 'none';
+	}
+
+	//normal quotes would ruin the VBA code
+	if (findTbox.includes('"') || repWhatTbox.includes('"') || repWithTbox.includes('"')) {
+		alert('For quotes use & Chr(34) [It has to be outside the ""]');
+		return null;
+	}
+
+	//Var assign
+	if (findEntire.checked === true) {
+		findLookat = "xlWhole";
+	} else {
+		findLookat = "xlPart"
+	}
+
+	if (findCase.checked === true) {
+		findMatchcase = "True";
+	} else {
+		findMatchcase = "False";
+	}
+
+	if (repEntire.checked === true) {
+		repLookat = "xlWhole";
+	} else {
+		repLookat = "xlPart"
+	}
+
+	if (repCase.checked === true) {
+		repMatchcase = "True";
+	} else {
+		repMatchcase = "False";
+	}
+
+	const findOut = '.Find(What:="' + findTbox + '", LookAt:=' + findLookat + ', LookIn:=xlValues, SearchOrder:=xlByRows, SearchDirection:=xlNext, MatchCase:=' + findMatchcase + ')';
+	const repOut = '.Replace What:="' + repWhatTbox + '", Replacement:="' + repWithTbox + '", LookAt:=' + repLookat + ', SearchOrder:=xlByRows, MatchCase:=' + repMatchcase + '';
+
+	//Code to Display
+	if (findRadio.checked === true) {
+		return findOut;
+	} if (replaceRadio.checked === true) {
+		return repOut;
+	}
+}
+
+//COPY2RAWFILELOADER CODE
+function icmCopy2rflCode() {
+	const copy2rflCbox = document.getElementById('copy2rfl_cbox');
+	let checked;
+	const mqCbox = document.getElementById('mq_universal');
+	let mqstart = '';
+	let mqcomma = ' ';
+
+	if (mqCbox.checked) {
+		mqstart = 'Application.Run "ICMaddin.xlam!';
+		mqcomma = '", ';
+	}
+	
+	if (copy2rflCbox.checked === true) {
+		checked = 'True';
+	} else {
+		checked = 'False';
+	}
+
+	const copy2RflCode = 'If ActiveWorkbook.Name = "RawFileLoader.xlsx" Then<br/>' +
+		'MsgBox("This function can\'t be used in RawFileLoader")<br/>Exit Sub<br/>' +
+		'Else<br/>' + mqstart + 'ICM_copy2RFL' + mqcomma + checked + '<br/>End If';
+
+	return copy2RflCode;
+}
+
+//Map ISINs
+function icmMapCode() {
+	const mapSpecCbox = document.getElementById('map_spec_cbox');
+	const mapFirstCbox = document.getElementById('map_first_cbox');
+	const mapSpecTbox = ', ' + document.getElementById('map_spec_tbox').value;
+	const mapSelectValue = document.getElementById('ICM_map_select').value;
+	let mapSelected = '';
+	const mqCbox = document.getElementById('mq_universal');
+	let mqstart = '';
+	let mqpar = '';
+	if (mqCbox.checked) {
+		mqstart = 'Application.Run "ICMaddin.xlam!';
+		mqpar = '"';
+	}
+
+	if (mapSelectValue === 'ISIN') {
+		mapSelected = 'ICM_ISINquery';
+	} 
+
+	if (mapSelectValue === 'secid') {
+		mapSelected = 'ICM_SecIDquery';
+	}
+
+	if (mapSelectValue === 'Ticker') {
+		mapSelected = 'ICM_Tickerquery';
+	}
+
+	if (mapSelectValue === 'IDC') {
+		mapSelected = 'ICM_IDC_statusquery';
+	}
+
+	mapSelected = mqstart + mapSelected + mqpar;
+
+	if (mapSelectValue != 'IDC') {
+		if (mapFirstCbox.checked) {
+			mapSelected += ', True';
+		} else {
+			mapSelected += ', False';
+		}
+	}
+
+	if (mapSpecCbox.checked) {
+		document.getElementById('div_map_specify').style.display = 'block';
+		if (mapSpecTbox === ', ') { return null; }
+		return mapSelected + mapSpecTbox;
+	} else {
+		document.getElementById('div_map_specify').style.display = 'none';
+		return mapSelected;
+	}
+}
+
+function icmMapPresetCode() {
+	const presetSelectValue = document.getElementById('menu_spec_map').value;
+	const mqCbox = document.getElementById('mq_universal');
+	let mqstart = '';
+	let mqcomma = ' ';
+	let mqpar = '';
+	if (mqCbox.checked) {
+		mqstart = 'Application.Run "ICMaddin.xlam!';
+		mqcomma = '", ';
+		mqpar = '"';
+	}
+	if (presetSelectValue === 'Select') {return 'Please select!'}
+	if (presetSelectValue === 'Preset1') {
+		return mqstart +'ICM_ISINquery' + mqcomma + 'True<br>' +
+		mqstart + 'ICM_SecIDquery' + mqcomma + 'False<br>' + mqstart + 'ICM_IDC_statusquery' + mqpar;
+	}
+	if (presetSelectValue === 'Preset2') {
+		return mqstart + 'ICM_SecIDquery' + mqcomma + 'True<br>' + mqstart + 
+		'ICM_ISINquery' + mqcomma + 'False<br>' + mqstart + 'ICM_IDC_statusquery' + mqpar;
+	}
+	if (presetSelectValue === 'ISINonly') {
+		return mqstart + 'ICM_ISINquery' + mqcomma + 'True<br>' + mqstart + 'ICM_IDC_statusquery' + mqpar;
+	}
+	if (presetSelectValue === 'SecIDonly') {
+		return mqstart + 'ICM_SecIDquery' + mqcomma + 'True<br>' + mqstart +
+		'ICM_IDC_statusquery' + mqpar + '<br>' + mqstart + 'ICM_ISINquery' + mqcomma + 'False';
+	}
+	if (presetSelectValue === 'Preset3') {
+		return mqstart + 'ICM_ISINquery' + mqcomma + 'True<br>' + mqstart +
+		'ICM_SecIDquery' + mqcomma + 'False<br>' + mqstart + 'ICM_Tickerquery' + mqcomma + 'False<br>' + mqstart +
+		 'ICM_IDC_statusquery' + mqpar;
+	}
+	if (presetSelectValue === 'Preset4') {
+		return mqstart + 'ICM_SecIDquery' + mqcomma + 'True<br>' + mqstart +
+		'ICM_ISINquery' + mqcomma + 'False<br>' + mqstart + 'ICM_Tickerquery' + mqcomma + 'False<br>' + mqstart +
+		 'ICM_IDC_statusquery' + mqpar;
+	}
+}
+
+//MORE CLEANUP CODES
+function icmMorecleanCode() {
+	const morecleanAskRadio = document.getElementById('moreclean_ask_radio');
+	const morecleanNoRadio = document.getElementById('moreclean_no_radio');
+	const morecleanYesRadio = document.getElementById('moreclean_yes_radio');
+
+	if (morecleanAskRadio.checked === true) {
+		return '';
+	}
+	if (morecleanNoRadio.checked === true) {
+		return ', False';
+	}
+	if (morecleanYesRadio.checked === true) {
+		return ', True';
+	}
+}
+
+//MULLTILINE CODES
+function icmMultilineCode() {
+	//Get what's selected
+	const icmMultilineVal = document.getElementById('menu_ICM_multiline').value;
+	const multilineBothRadio = document.getElementById('multiline_both_radio');
+	const multilineColorRadio = document.getElementById('multiline_color_radio');
+	const multilineMergeRadio = document.getElementById('multiline_merge_radio');
+	const mqCbox = document.getElementById('mq_universal');
+	let mqstart = '';
+	let mqcomma = ' ';
+
+	if (mqCbox.checked) {
+		mqstart = 'Application.Run "ICMaddin.xlam!';
+		mqcomma = '", ';
+	}
+
+	//Output variables
+	const icmMultilinesColor = mqstart + icmMultilineVal + mqcomma + 'False'
+	const icmMultilinesMerge = mqstart + icmMultilineVal + mqcomma + 'True';
+
+	if (multilineColorRadio.checked === true) {
+		return icmMultilinesColor;
+	}
+	if (multilineMergeRadio.checked === true) {
+		return icmMultilinesMerge;
+	}
+	if (multilineBothRadio.checked === true) {
+		return (icmMultilinesColor + '<br/>' + icmMultilinesMerge);
+	}
+}
+
+//NONUS MANUAL&AUTO
+function icmNonusDisplayAndCode() {
+	//Display
+	const icmNonusVal = document.getElementById('menu_ICM_nonus').value;
+	if (icmNonusVal === 'DollarAuto') {
+		document.getElementById('nonus_autorow1').style.display = 'table-row';
+		document.getElementById('nonus_autorow2').style.display = 'table-row';
+	} else {
+		document.getElementById('nonus_autorow1').style.display = 'none';
+		document.getElementById('nonus_autorow2').style.display = 'none';
+	}
+	
+	if (icmNonusVal === 'DollarManual') {
+		document.getElementById('nonus_manualrow').style.display = 'table-row';
+	} else {
+		document.getElementById('nonus_manualrow').style.display = 'none';
+	}
+
+	const mqCbox = document.getElementById('mq_universal');
+	let mqstart = '';
+	let mqpar = '';
+	let mqcomma = ' ';
+
+	if (mqCbox.checked) {
+		mqstart = 'Application.Run "ICMaddin.xlam!';
+		mqpar = '"';
+		mqcomma = '", ';
+	}
+
+	//Code
+	const nonusAutoCurrVal = document.getElementById('nonus_auto_curr_tbox').value.toUpperCase();
+	const nonusAutoDateVal = document.getElementById('nonus_auto_date_tbox').value;
+	const nonusManualVal = document.getElementById('nonus_manual_tbox').value;
+	const AutoCodeStart = 'Dim ICM_rate As Double<br/>ICM_rate = ICM_currency_get_rate ("';
+	const AUtoCodeEnd = '")</br>' + mqstart + 'ICM_currency_calc' + mqcomma +  'ICM_rate';
+
+	if (icmNonusVal === 'DollarManual' && nonusManualVal !== '') {
+		return mqstart +'ICM_currency_calc' + mqcomma + nonusManualVal;	
+	}
+	if (mqCbox.checked && icmNonusVal === 'DollarAuto' && nonusAutoDateVal !== '' && nonusAutoCurrVal !== '') {
+		return 'Dim ICM_rate As Double<br/>ICM_rate = Application.Run("ICMaddin.xlam!ICM_currency_get_rate", "' +
+			nonusAutoDateVal + '", "' + nonusAutoCurrVal + AUtoCodeEnd;
+	}
+	if (icmNonusVal === 'DollarAuto' && nonusAutoDateVal !== '' && nonusAutoCurrVal !== '') {
+		return AutoCodeStart + nonusAutoDateVal + '", "' + nonusAutoCurrVal + AUtoCodeEnd;
+	}
+	//else
+		return null;
+}
+
+//SWAPCOLUMNS INTERNAL CODE
+function icmSwapcolInternalCode() {
+	const swapcolIntVal = document.getElementById('swapcol_int_tbox').value.toUpperCase();
+	const mqCbox = document.getElementById('mq_universal');
+	let mqstart = '';
+	let mqcomma = ' ';
+
+	if (mqCbox.checked) {
+		mqstart = 'Application.Run "ICMaddin.xlam!';
+		mqcomma = '", ';
+	}
+
+	if (swapcolIntVal === '') { return null; }
+
+	return mqstart + 'ICM_swapcolumns_internal' + mqcomma + '"' + swapcolIntVal + '"';
+}
+
+//SOUPER FILTER CODE
+function icmSouperFilterCode() {
+	const souperVal = document.getElementById('souper_tbox').value.toUpperCase();
+	const mqCbox = document.getElementById('mq_universal');
+	let mqstart = '';
+	let mqpar = '';
+
+	if (mqCbox.checked) {
+		mqstart = 'Application.Run "ICMaddin.xlam!';
+		mqpar = '"';
+	}
+	
+	if (souperVal === '') { return null; }
+
+	return 'Range("' + souperVal + ':' + souperVal + '").Select <br>' + mqstart + 'ICM_souper_filter' + mqpar;
+}
+
+//NUMBERFORMAT
+function numberformatDisplayAndCode() {
+	const nmbrfmtRangeIdx = document.getElementById('numberformat_range_select').selectedIndex;
+	const nmbrfmtTypeIdx = document.getElementById('numberformat_type_select').selectedIndex;
+	const nmbrfmtColumnVal = document.getElementById('numberformat_column_tbox').value.toUpperCase();
+	const nmbrfmtTilColumnVal = document.getElementById('numberformat_til_column_tbox').value.toUpperCase();
+	
+	//Output variables
+	const nbrfmt = [];
+		nbrfmt[0] = '';
+		nbrfmt[1] = '#,##0.###';
+		nbrfmt[2] = 'General';
+		nbrfmt[3] = '0.00%';
+		nbrfmt[4] = '@';
+
+	//Display
+	if (nmbrfmtRangeIdx === 3 || nmbrfmtRangeIdx === 4 || nmbrfmtRangeIdx === 5) {
+		document.getElementById('numberformat_type_tr').style.display = 'table-row';
+	} else {
+		document.getElementById('numberformat_type_tr').style.display = 'none';
+	}
+
+	if (nmbrfmtRangeIdx === 3 || nmbrfmtRangeIdx === 4) {
+		document.getElementById('numberformat_range1').style.display = 'table-row';
+	} else {
+		document.getElementById('numberformat_range1').style.display = 'none';
+	}
+
+	if (nmbrfmtRangeIdx === 4) {
+		document.getElementById('numberformat_range2').style.display = 'table-row';
+	} else {
+		document.getElementById('numberformat_range2').style.display = 'none';
+	}
+
+	//Code
+	//If column/til column textbox empty
+	if (nmbrfmtRangeIdx === 3 && nmbrfmtColumnVal === '' || nmbrfmtRangeIdx === 4 && (nmbrfmtTilColumnVal === '' || nmbrfmtColumnVal === '')) {
+		return null;
+	}
+	//If type not selected
+	if (nmbrfmtTypeIdx === 0 && (nmbrfmtRangeIdx === 3 || nmbrfmtRangeIdx === 4 || nmbrfmtRangeIdx === 5)) {
+		return null;
+	}
+
+	switch(nmbrfmtRangeIdx) {
+		case 0:
+			return null;
+		case 1:
+			return 'Range("C:C").Numberformat = "@"';
+		case 2:
+			return 'ICM_autoformatDE';
+		case 3:
+			return 'Range("' + nmbrfmtColumnVal + ':' + nmbrfmtColumnVal + '").Numberformat = "' + nbrfmt[nmbrfmtTypeIdx] + '"';
+		case 4:
+			return 'Range("' + nmbrfmtColumnVal + ':' + nmbrfmtTilColumnVal + '").Numberformat = "' + nbrfmt[nmbrfmtTypeIdx] + '"';
+		case 5:
+			return 'Cells.Numberformat = "' + nbrfmt[nmbrfmtTypeIdx] + '"';
+	}
+}
+
+//VBA If condition
+function vbaIfConditions() {
+	const numOrstr = document.getElementById('vba_condit_select').value;
+	const numSel = document.getElementById('vba_condit_num_select').value;
+	const numBox = document.getElementById('vba_condit_num_tbox').value;
+	const strBox = document.getElementById('vba_condit_str_tbox').value;
+	const strSel = document.getElementById('vba_condit_str_select').value;
+	let operator = '';
+	let operatorstr = '';
+	let wildstart = '';
+	let wildend = '';
+	let operatornot = '';
+	//operators
+	switch(numSel) {
+		case 'eq': operator='='; break;
+		case 'noteq': operator='<>'; break;
+		case 'grt': operator='>'; break;
+		case 'grteq': operator='>='; break;
+		case 'less': operator='<'; break;
+		case 'lesseq': operator='<='; break;
+	}
+
+	if (strSel === 'eq') {
+		operatorstr='=';
+	}
+	if (strSel === 'noteq') {
+		operatorstr='<>';
+	}
+	if (strSel === 'beg' || strSel === 'end' || strSel === 'cont' || strSel === 'notbeg' || strSel === 'notend' || strSel === 'notcont') {
+		operatorstr='Like';
+	}
+	if (strSel === 'notbeg' || strSel === 'notend' || strSel === 'notcont') {
+		operatornot='Not ';
+	}
+	if (strSel ==='beg' || strSel ==='notbeg' || strSel ==='cont' || strSel === 'notcont') {
+		wildend = '*'
+	}
+	if (strSel ==='end' || strSel ==='notend' || strSel ==='cont' || strSel === 'notcont') {
+		wildstart = '*'
+	}
+	//operators end
+
+	//display inputfields
+	if (numOrstr === 'num') {
+		document.getElementById('div_vba_condit_num').style.display = 'block';
+		document.getElementById('div_vba_condit_str').style.display = 'none';
+	} else {
+		document.getElementById('div_vba_condit_num').style.display = 'none';
+		document.getElementById('div_vba_condit_str').style.display = 'block';
+	}
+	//display code
+	if (numOrstr === 'num' && numBox != '') {
+		return 'If <b>[var/cellRef] ' + operator + ' ' + numBox + '</b> Then';
+	}
+	if (numOrstr === 'str' && strSel === 'empty') {
+		return 'If <b>[var/cellRef] = ""</b> Then';
+	}
+	if (numOrstr === 'str' && strSel === 'notempty') {
+		return 'If <b>[var/cellRef] <> ""</b> Then';
+	}
+	if (numOrstr === 'str' && strBox != '') {
+		return 'If <b>' + operatornot + '[var/cellRef] ' + operatorstr + ' "' +
+		wildstart + strBox + wildend +'"</b> Then';
+	}
+
+	//else
+	return '';
+}
+
+//Resetting the backgroundcolor of inputfields
+function resetValidations() {
+	const resetValid = document.querySelectorAll('input');
+	for (let i = 0; i < resetValid.length; i++) {
+		resetValid[i].style.backgroundColor = '';
+	}
+}
+
+//Only accept English letters as input
+function validateLetters() {
+	const letters = /^.*[^A-Za-z].*$/;
+	const isLetter = document.querySelectorAll('.is_letter');
+	for (let i = 0; i < isLetter.length; i++) {
+		if (isLetter[i].value.match(letters)) {
+			isLetter[i].style.backgroundColor = '#EDD0CC';
+			document.getElementById('code_div').innerHTML = '';
+			alert('Please only enter English letters!');
+		} 
+	}
+}
+
+//Only accept numbers as input
+function validateNumbers() {
+	const nmbrs = /^.*[^0-9.].*$/;
+	const isNumber = document.querySelectorAll('.is_number');
+	for (let i = 0; i < isNumber.length; i++) {
+		if (isNumber[i].value.match(nmbrs)) {
+			isNumber[i].style.backgroundColor = '#EDD0CC';
+			document.getElementById('code_div').innerHTML = '';
+			alert('Please only enter numbers!');
+		}
+	}
+}
+</script>
+</head>
+
+<body onload='browserEvents(), displaySecondaryMenu(), displayInputFields()'>
+<div id='div_above_code'>
+
+<!--Menu selection-->
+<fieldset id='menu_fieldset'>
+<b>Main menu</b></br>
+	<!--Main menu-->
+	<Select class='js_inputfields' id='menu_main' name='menu_main'>
+		<option value='Select'> Select </option>
+		<optgroup label="Buttons">
+			<option value='menu_ICM_gen'> ICM General </option>
+			<option value='menu_ICM_info2b'> ICM Info to B </option>
+			<option value='menu_ICM_main'> ICM Main </option>	
+			<option value='menu_ICM_moreclean'> ICM More Cleanup </option>
+			<option value='menu_ICM_multiline'> ICM Multiline </option>
+			<option value='menu_ICM_nav'> ICM Nav </option>
+			<option value='menu_ICM_nonus'> ICM Non-US </option>
+			<option value='menu_ICM_step'> ICM Step-by-step </option>
+			<option value='menu_ICM_special'> ICM Special </option>
+			<option value='menu_ICM_work'> ICM Workb/WS </option>
+		</optgroup>
+		<optgroup label="Other">
+			<option value='menu_vbaBasics'> VBA Basics </option>
+			<option value='menu_vbaVideos'> VBA Videos </option>
+		</optgroup>
+	</select><br>
+
+	<!--ICM General menu-->
+	<Select class='js_inputfields' id='menu_ICM_gen' name='menu_ICM_gen' style='display: none;'>
+		<option value='Select'> Select </option>
+		<option value='ICM_clearall'> Clear Sheet </option>
+		<option value='ICM_copy2RFL'> Copy To RawFileLoader </option>
+		<option value='ICM_double'> Double to Single </option>
+		<option value='ICM_paste'> Paste as Value </option>
+		<option value='ICM_proper'> Proper </option>
+		<option value='ICM_shiftleft'> Shift to the Left </option>
+		<option value='ICM_souper_filter'> Souper Filter </option>
+	</select>
+
+	<!--ICM Info to B Menu-->
+	<Select class='js_inputfields' id='menu_ICM_info2b' name='menu_ICM_info2b' style='display: none;'>
+		<option value='Select'> Select </option>
+		<option value='ICM_IssuePrice'> Issue Price to B </option>
+		<option value='ICM_IssueType'> Issue Type to B </option>	
+	</Select>
+
+	<!--ICM Main menu-->
+	<Select class='js_inputfields' id='menu_ICM_main' name='menu_ICM_main' style='display: none;'>
+		<option value='Select'> Select </option>
+		<option value='Macro'> To Macros </option>
+		<option value='All'> All </option>	
+		<option value='All1000'> All + /1000 </option>
+		<option value='Copyto'> Copy to RawFile All + /1000 </option>		
+	</Select>
+
+	<!--ICM More Cleanup Menu-->
+	<Select class='js_inputfields' id='menu_ICM_moreclean' name='menu_ICM_moreclean' style='display: none;'>
+		<option value='Select'> Select </option>
+		<option value='countries'> Delete Countries </option>
+		<option value='currencies'> Delete Currencies </option>
+		<option value='industries'> Delete Industries </option>
+	</Select>
+
+	<!--ICM Multiline menu-->
+	<Select class='js_inputfields' id='menu_ICM_multiline' name='menu_ICM_multiline' style='display: none;'>
+		<option value='Select'> Select </option>
+		<option value='ICM_multiline_highlight'> Multiline Bottom </option>
+		<option value='ICM_multiline_highlight_inverted'> Multiline Top </option>
+		<option value='ICM_multiline_highlight_X'> Multiline X </option>	
+	</Select>
+	
+	<!--ICM Non-US menu-->
+		<Select class='js_inputfields' id='menu_ICM_nav' name='menu_ICM_nav' style='display: none;'>
+			<option value='Select'> Select </option>
+			<option value='ICM_nav'> Nav Calculator </option>
+			<option value='Add4Zeroes'> Add 4 Zeroes </option>
+		</Select>
+
+	<!--ICM Non-US menu-->
+	<Select class='js_inputfields' id='menu_ICM_nonus' name='menu_ICM_nonus' style='display: none;'>
+		<option value='Select'> Select </option>
+		<option value='Dollar'> Currency to Dollar </option>
+		<option value='DollarAuto'> Currency to Dollar Auto </option>
+		<option value='DollarManual'> Currency to Dollar Manual </option>	
+		<option value='Convert'> Convert Numbers </option>
+	</Select>
+
+	<!--ICM Step-by-step menu-->
+	<Select class='js_inputfields' name='menu_ICM_step' id='menu_ICM_step' style='display: none;'>
+		<option value='Select'> Select </option>
+		<option value='ICM_addzeroes'> Add Zeroes </option>
+		<option value='ICM_bulkswap'> Bulk Swap </option>
+		<option value='Code_bulkswap'> Bulk Swap Code </option>
+		<option value='ICM_count'> Count </option>
+		<option value='ICM_divide'> Divide by 1000 </option>
+		<option value='ICM_replace'> Multi Replace </option>
+		<option value='ICM_swapcolumns'> Swap Columns </option>
+		<option value='ICM_swapcolumns_internal'> Swap Columns Auto </option>
+	</Select>
+
+	<!--ICM Special menu-->
+	<Select class='js_inputfields' name='menu_ICM_special' id='menu_ICM_special' style='display: none;'>
+		<option value='Select'> Select </option>
+		<optgroup label="Oddly Specific">
+			<option value='ICM_R_divideNEW100'>Divide by 100</option>
+		</optgroup>
+		<optgroup label="Col A functions">
+			<option value='ICM_companyEndingCorrecter'>Co Type Abbreviator</option>
+			<option value='ICM_deleteRowsWithPercentage'>Delete Rows with %</option>
+			<option value='ICM_duplicate_rem'>Dup Indicator</option>
+			<option value='ICM_columnABracketsToB'>Extract () To B</option>
+			<option value='ICM_ISIN_split'>Split ISIN</option>
+		</optgroup>
+		<optgroup label="WBook/Wsheet functions">
+			<option value='OpenCSV'>Open CSV</option>
+			<option value='ICM_removeSheetPass'>Sheet Pass Remover</option>
+		</optgroup>
+		<optgroup label="Ticker">
+			<option value='ICM_Tickerending'>Add TickerE from Country</option>
+			<option value='ICM_tickerEndingReplacer'>Correct Tickers</option>
+		</optgroup>
+		<optgroup label="RFL">
+			<option value='ICM_Compare_Mapped'>Compare Mapped</option>
+			<option value='Map_IDs'>Map IDs</option>
+			<option value='Map_Presets'>Map presets</option>
+		</optgroup>
+	</Select>
+
+	<!--ICM Workb/WS Menu-->
+	<Select class='js_inputfields' id='menu_ICM_work' name='menu_ICM_work' style='display: none;'>
+		<option value='Select'> Select </option>
+		<option value='Reset'> Reset Workbook </option>
+		<option value='Copy'> Copy to Temp </option>	
+	</Select>
+
+	<Select class='js_inputfields' id='menu_vbaBasics' name='menu_vbaBasics' style='display: none;'>
+		<option value='Select'> Select </option>
+		<optgroup label="Code">
+			<option value='div_snip_bulkswap'> Bulk Swap Code </option>
+			<option value='vbaBasics_conditions_div'> Conditions </option>
+			<option value='vbaBasics_dynamic_div'> Dynamic Range </option>
+			<option value='vbaBasics_find_div'> Find/Replace </option>
+			<option value='vbaBasics_numberf_div'> Numberformat </option>
+		</optgroup>
+		<optgroup label="Basics">
+			<option value='vbaBasics_basics_div'> 1st steps </option>
+			<option value='vbaBasics_message_div'> MessageBoxes </option>
+			<option value='vbaBasics_oper_div'> Operators </option>
+			<option value='vbaBasics_functions_div'> Subs/Functions </option>
+			<option value='vbaBasics_variables_div'> Variables </option>
+			<option value='vbaBasics_visuals_div'> Visuals </option>
+		</optgroup>
+		<optgroup label="Range">
+			<option value='vbaBasics_offset_div'> Offset </option>
+			<option value='vbaBasics_rangeobject_div'> Range methods, properties </option>
+			<option value='vbaBasics_rangeref_div'> Range references </option>
+			<option value='vbaBasics_with_div'> With </option>
+			<option value='vbaBasics_workbook_div'> Workbook/Wsheet methods </option>
+		</optgroup>
+		<optgroup label="Advanced">
+			<option value='vbaBasics_arrays_div'> Arrays </option>
+			<option value='vbaBasics_autofilter_div'> AutoFilter </option>
+			<option value='vbaBasics_condition_div'> Conditional statements </option>
+			<option value='vbaBasics_dict_div'> Database logic </option>
+			<option value='vbaBasics_error_div'> Error handling/Debugging </option>
+			<option value='vbaBasics_loop_div'> Loops </option>
+			<option value='vbaBasics_shortcut_div'> Shortcuts </option>
+			<option value='vbaBasics_sort_div'> Sorting </option>
+			<option value='vbaBasics_strings_div'> String Functions </option>
+			<option value='vbaBasics_timer_div'> Timer </option>
+		</optgroup>
+	</Select>
+	<label id='mq_label' style='padding-top: 5px;'>MQ addin?
+		<input type='checkbox' name='mq_universal' id='mq_universal'/> yes <br>
+	</label>
+</fieldset> <!--Main menu ends here-->
+
+
+
+<!--Inputfield/VBA infos starts here-->
+<!--ICM General Copy To RawFileLoader checkbox-->
+<div class='inputfield' id='div_ICM_copy2RFL' style='display: none;'>
+	<label>Close the workbook?</br>
+	<input type='checkbox' name='copy2rfl_cbox' id='copy2rfl_cbox'/>yes
+	</label>
+</div>
+
+<!--ICM General Double to Single checkbox-->
+<div class='inputfield' id='div_ICM_double' style='display: none;'>
+	<label>Write the column letter into this box: 
+	<input type='text' class='is_letter' name='double_tbox' id='double_tbox' size='4' maxlength='1'/></label>
+</div>
+
+<!--ICM General Souper Filter inputfield-->
+<div class='inputfield' id='div_ICM_souper' style='display: none;'>
+	<label>Write the column letter into this box: 
+	<input type='text' class='is_letter' name='souper_tbox' id='souper_tbox' size='4' maxlength='1'/></label>
+</div>
+
+<!--ICM More Cleanup inputfield-->
+<div class='inputfield' id='div_ICM_moreclean' style='display: none;'>
+	Delete if has value?<br>
+	<label>
+	<input type='radio' id='moreclean_ask_radio' name='moreclean_Radio' checked/> Ask me
+	</label><br/>
+	<label>
+	<input type='radio' id='moreclean_no_radio' name='moreclean_Radio'/> No
+	</label><br/>
+	<label>
+	<input type='radio' id='moreclean_yes_radio' name='moreclean_Radio'/> Yes
+	</label>
+</div>
+
+<!--ICM Multiline inputfield-->
+<div class='inputfield' id='div_ICM_multiline' style='display: none;'>
+	<label>
+	<input type='radio' id='multiline_color_radio' name='multiline_Radio' checked/> Only color
+	</label><br/>
+	<label>
+	<input type='radio' id='multiline_merge_radio' name='multiline_Radio'/> Only merge
+	</label><br/>
+	<label>
+	<input type='radio' id='multiline_both_radio' name='multiline_Radio'/> Do both
+	</label>
+</div>
+
+<!--ICM NonUs Convert inputfield-->
+<div class='inputfield' id='div_ICM_nonus_convert' style='display: none;'>
+	<label>Write the column letter into this box: 
+	<input type='text' class='is_letter' name='convert_tbox' id='convert_tbox' size='4' maxlength='1'/></label>
+</div>
+
+<!--ICM NonUs Currency inputfield-->
+<div class='inputfield' id='div_ICM_nonus_curr' style='display: none;'>
+	<table class='inputtable' id='nonus_inputt'>
+		<tr id='nonus_manualrow' style='display: none;'>
+			<td>Enter rate:</td>
+			<td>
+				<input type='text' class='is_number' id='nonus_manual_tbox' name='nonus_manual_tbox'>
+			</td>
+		</tr>
+		<tr id='nonus_autorow1' style='display: none;'>
+			<td>Enter date:</td>
+			<td>
+				<input type='text' class='is_number' id='nonus_auto_date_tbox' name='nonus_auto_date_tbox' maxlength='8'>
+			</td>
+			<td>(20200831)</td>
+		</tr>
+		<tr id='nonus_autorow2' style='display: none;'>
+			<td>Enter currency:</td>
+			<td>
+				<input type='text' class='is_letter' id='nonus_auto_curr_tbox' name='nonus_auto_curr_tbox' maxlength='3'>
+			</td>
+			<td>(USD/CAD etc.)</td>
+		</tr>
+	</table>
+</div>
+
+<!--ICM Special Compare_Mapped inputfield-->
+<div class='inputfield' id='div_ICM_compare_mapped' style='display: none;'>
+	<label>Write the column letter where your issue names are into this box: 
+	<input type='text' class='is_letter' name='compare_mapped_tbox' id='compare_mapped_tbox' size='1' maxlength='1'/></label>
+</div>
+
+<!--ICM Special Map ISINs-->
+<div class='inputfield' id='div_ICM_map' style='display: none;'>
+	Map <select id='ICM_map_select' class='margin_up_down'>
+		<option value='ISIN'> ISIN </option>
+		<option value='secid'> SecID </option>
+		<option value='Ticker'> Ticker </option>
+		<option value='IDC'> IDC info to B </option>
+	</select><br>
+	<label>First mapper in line? 
+		<input type='checkbox' name='map_first_cbox' id='map_first_cbox'/>yes (The code skips non-empty C cells. If yes: col C is cleared first.)</br>
+	</label>
+	<label>Specify the last cell? 
+		<input type='checkbox' name='map_spec_cbox' id='map_spec_cbox'/>yes
+	</label>
+	<div id='div_map_specify' style='display: none;'>
+		<label>You should use a dynamic range here (.Row ending) or enter a number: 
+			<input type='text' name='map_spec_tbox' id='map_spec_tbox' size='20'/>
+		</label><br>
+		Example: <span class="codes">Range("A1").End(xlDown).Row</span>
+	</div>
+</div>
+
+<!--ICM Special Map Presets-->
+<div class='inputfield' id='div_spec_map' style='display: none;'>
+	<Select class='js_inputfields' id='menu_spec_map' name='menu_spec_map'>
+		<option value='Select'> Select </option>
+		<option value='Preset1'> ISIN, SecID, IDC </option>
+		<option value='Preset3'> IS, Sec, Tkr, IDC</option>
+		<option value='Preset2'> SecID, ISIN, IDC </option>
+		<option value='Preset4'> Sec, IS, Tkr, IDC</option>
+		<option value='ISINonly'> ISIN, IDC </option>	
+		<option value='SecIDonly'> SecID only </option>	
+	</Select>
+</div>
+
+<!--ICM step Bulk swapcolumns categories-->
+<div class='inputfield' id='div_snip_bulkswap' style='display: none;'>
+	I'm swapping
+	<Select id='bulkswap_select' name='bulkswap_select'>
+		<option> Select </option>
+		<option> 1 </option>
+		<option> 2 </option>
+		<option> 3 </option>
+		<option> 4 </option>
+		<option> 5 </option>
+		<option> 6 </option>
+		<option> 7 </option>
+		<option> 8 </option>
+		<option> 9 </option>
+		<option> 10 </option>	
+	</select> column(s).<br/>
+
+	<div id='div_bulkswap_selected' style='display: none'>
+		<table class='inputtable' id='bulkswap_inputt'>
+			<tr>
+				<td>From Column</td><td>To Column</td>
+			</tr>
+		</table>
+
+		<label>Check if you want to clear the sheet:
+			<input type='checkbox' name='bulkswap_clear_cbox' id='bulkswap_clear_cbox' checked>
+		</label> <i>(Recommended)</i><br/>
+
+		<div id='bulksw_inputf' style='display: none'>
+			Instead, I'm<br>
+			<label>
+				<input type='radio' name='bulkswap_cutcheck' id='bulkswap_copy_radio' checked>
+			 Copying
+			</label><br/>
+			<label>
+				<input type='radio' name='bulkswap_cutcheck' id='bulkswap_cut_radio'>
+			 Cutting
+			</label>
+		</div>
+	</div>
+</div>
+
+<!--ICM Step Swapcolumns_Internal inputfield-->
+<div class='inputfield' id='div_ICM_swapcol' style='display: none;'>
+	<label>Write the column letters (name, shares, value, [secid]) into this box: 
+	<input type='text' class='is_letter' name='swapcol_int_tbox' id='swapcol_int_tbox' size='4' maxlength='4'/></label>
+</div>
+
+<!--VBA VBA VBA VBA VBA VBA VBA VBA VBA VBA VBA VBA -->
+<!--VBA Dynamic ranges-->
+<div class='inputfield' id='vbaBasics_dynamic_div' style='display: none;'>
+	I'm looking for the 
+	<select class='margin_up_down' id='dyn_range_first_select'>
+		<option> Select </option>
+		<option> Last non-empty cell in column </option>
+		<option> Last non-empty cell in row </option>
+		<option> Last/First non-empty cell in sheet </option>
+	</select>
+
+	<!--Dynamic last column-->
+	<div id='dyn_range_last_col_div' style='display: none;'>
+		I'm looking for the last<br>
+
+		<label><input type='radio' id='dynr_lcol_cell_radio' name='dyn_lcol_radio' checked> Cell</label><br>
+		<label><input type='radio' id='dynr_lcol_col_radio' name='dyn_lcol_radio'> Column number</label><br>
+
+		in <label>Row <input type='text' class='margin_up_down' id='dynr_lcol_row_tbox'></label> (this textbox accepts numbers and letters, so you can use your variable name here)<br>   
+		
+		<select id='dynr_lcol_from_select' class='margin_up_down'>
+			<option> Select </option>
+			<option> Left from the last column </option>
+			<option> Left from </option>
+			<option> Right from </option>
+		</select><br>
+
+		<div class='margin_up_down' id='dynr_lcol_col_div' style='display: none'><label>Column <input class='is_letter' type='text' id='dynr_lcol_col_tbox' maxlength='1' size='4'></label></div>
+	</div>
+
+	<!--Dynamic last row-->
+	<div id='dyn_range_last_row_div' style='display: none;'>
+		I'm looking for the last<br>
+
+		<label><input type='radio' id='dynr_lrow_cell_radio' name='dyn_lrow_radio' checked> Cell</label><br>
+		<label><input type='radio' id='dynr_lrow_row_radio' name='dyn_lrow_radio'> Rownumber</label><br>
+
+		in <label>Column <input type='text' class='is_letter margin_up_down' id='dynr_lrow_col_tbox' maxlength='1' size='4'></label><br>   
+		
+		<select id='dynr_lrow_from_select' class='margin_up_down'>
+			<option> Select </option>
+			<option> Up from the last row </option>
+			<option> Down from </option>
+			<option> Up from </option>
+		</select><br>
+
+		<div class='margin_up_down' id='dynr_lrow_row_div' style='display: none'><label>Row <input type='text' id='dynr_lrow_row_tbox'> (this textbox accepts numbers and letters, so you can use your variable name here)</label></div>
+	</div>
+
+	<!--Dynamic last cell/row in sheet-->
+	<div id='dyn_sheet_row_div' style='display: none'>
+		I'm looking for the last<br>
+		<label><input type='radio' name='dynr_sheet_select' id='dynr_sheet_lrow' checked> Row in the sheet that has data </label>
+		<i> (If you use this without ".Row", it will give you the first cell from the right in the last row with data)</i><br>
+		<label><input type='radio' name='dynr_sheet_select' id='dynr_sheet_lcol'> Column in the sheet that has data </label>
+		<i> (If you use this without ".Column", it will give you the first cell from the bottom in the last column with data)</i><br>
+		<label><input type='radio' name='dynr_sheet_select' id='dynr_sheet_lrow_lcel'> The intersection of these two</label>
+		<i> (It might be an empty cell)</i><br><br>
+
+		I'm looking for the first<br>
+		<label><input type='radio' name='dynr_sheet_select' id='dynr_sheet_frow' checked> Row in the sheet that has data </label>
+		<i>(If you use this without ".Row", it will give you the first cell from the left in the first row with data)</i><br>
+		<label><input type='radio' name='dynr_sheet_select' id='dynr_sheet_fcol'> Column in the sheet that has data </label>
+		<i>(If you use this without ".Column", it will give you the first cell from the top in the first column with data)</i><br>	
+		<label><input type='radio' name='dynr_sheet_select' id='dynr_sheet_frow_fcel'> The intersection of these two</label>
+		<i> (It might be an empty cell)</i>
+	</div>
+</div>
+
+<!--VBA Find/Replace inputfield-->
+<div class='inputfield' id='vbaBasics_find_div' style='display: none;'>
+
+	<!--ORDER IS IMPORTANT!-->
+	<input type='radio' id='findrep_find_radio' name='find_rep_radio' style='display: none' checked/>
+	<label for='findrep_find_radio' class='vbaBasics_find_label'>Find</label>
+
+	<input type='radio' id='findrep_replace_radio' name='find_rep_radio' style='display: none'/>
+	<label for='findrep_replace_radio' class='vbaBasics_find_label'>Replace</label>
+
+	<div id='findrep_find_div'>
+		Find what: <input type='text' class='margin_up_down' id='findrep_find_tbox'> <i>(Multiple spaces can only be added in VBA)</i><br>
+		<label>Match case 
+			<input type='checkbox' id='findrep_find_case_cbox'>
+		</label><br>
+		<label>Match entire cell content 
+			<input type='checkbox' id='findrep_find_entire_cbox'>
+		</label><br><br>
+		<b>This is the equivalent of ctrl-f. Usage: [Range].Find...</b> (<a href="https://docs.microsoft.com/en-us/office/vba/api/excel.range.find" target="_blank">More Info</a>)<br>
+		<b>This only finds one cell, for finding multiple cells, you have to loop!</b><br>
+		To assign what's found to a variable and do some error handling, use <span class="codes">Set</span>, and If<br>
+		<div class="code_snip">
+			Dim [VariableName] As Range<br>
+			<b>Set</b> [VariableName] = [.Find ...]<br>
+			<b>If [Not]</b> [VariableName] <b>Is Nothing</b> Then
+		</div><br>
+		- Use Not if you want to specify what to do if it found something, else you handle cases when nothing is found.<br>
+		<i>If you want to use the function with variables, remove the ""-s from What:=</i><br>
+		If you want to <u>find all occurrences</u> on a page, you have to loop with the <b>FindNext</b> method. <a href="https://excelmacromastery.com/excel-vba-find/#Multiple_Searches" target="_blank">Here's more info</a> how to do that.
+	</div>
+
+	<div id='findrep_rep_div'>
+		Find what: <input type='text' class='margin_up_down' id='findrep_rep_what_tbox'> <i>(Multiple spaces can only be added in VBA)</i><br>
+		Replace with: <input type='text' id='findrep_rep_with_tbox'> <i>(Multiple spaces can only be added in VBA)</i><br>
+		<label>Match case 
+			<input type='checkbox' id='findrep_rep_case_cbox'>
+		</label><br>
+		<label>Match entire cell content 
+			<input type='checkbox' id='findrep_rep_entire_cbox'>
+		</label><br><br>
+		<b>This is the equivalent of ctrl-h. Usage: [Range].Replace...</b> (<a href="https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/replace-function" target="_blank">More Info</a>)<br>
+		<i>If you want to use the function with variables, remove the ""-s from What:= and/or Replacement:=</i><br>
+		If you do lot of replaces on the same range, consider using <b>With blocks</b>
+	</div>
+
+</div>
+
+<!--VBA Numberformat-->
+<div class='inputfield' id='vbaBasics_numberf_div' style='display: none;'>
+	<i>It's the same as setting the format at Home/Number</i>
+	<table class='inputtable'>
+		<tr>
+			<td>Choose Range</td>
+			<td>
+				<Select id='numberformat_range_select' name='numberformat_range_select'>
+				<option> Select </option>
+				<option> Cusip C </option>
+				<option> DE usual </option>
+				<option> Column </option>
+				<option> Columns </option>
+				<option> Sheet </option>
+				</Select>
+			</td>
+		</tr>
+		<tr id='numberformat_type_tr' style='display: none;'>
+			<td>Choose Type</td>
+			<td>
+				<Select id='numberformat_type_select' name='numberformat_type_select'>
+				<option> Select </option>
+				<option> Column D/E </option>
+				<option> General </option>
+				<option> Percentage </option>
+				<option> Text </option>
+				</Select>
+			</td>
+		</tr>
+		<tr id='numberformat_range1' style='display: none;'>
+			<td>Column</td>
+			<td>
+			<input type='text' class='is_letter' id='numberformat_column_tbox' name='numberformat_column_tbox' maxlength='1' size='4' />
+			</td>
+		</tr>
+		<tr id='numberformat_range2' style='display: none;'>
+			<td>Til Column</td>
+			<td>
+			<input type='text' class='is_letter' id='numberformat_til_column_tbox' name='numberformat_til_column_tbox' maxlength='1' size='4' />
+			</td>
+		</tr>
+		</table>
+</div>
+
+<!--VBA If conditions-->
+<div class='inputfield' id='vbaBasics_conditions_div' style='display: none;'>
+	I'm comparing
+	<Select id='vba_condit_select'>
+		<option value='str'> Strings </option>
+		<option value='num'> Numbers </option>
+	</Select><br>
+	<div id='div_vba_condit_num' style='display: none;'>
+	If [var/cellRef] <Select id='vba_condit_num_select'>
+		<option value='eq'> equals </option>
+		<option value='noteq'> does not equal </option>
+		<option value='grt'> greater than </option>
+		<option value='grteq'> greater than or equal </option>
+		<option value='less'> less than </option>
+		<option value='lesseq'> less than or equal </option>
+	</Select> <input class= 'is_number' type='text' name='vba_condit_num_tbox' id='vba_condit_num_tbox' size='20'/> Then [do something]</div>
+	<div id='div_vba_condit_str' style='display: none;'>
+	<i>These comparisons are case sensitive!</i><br>
+	If [var/cellRef] <Select id='vba_condit_str_select'>
+		<option value='eq'> equals (exact match) </option>
+		<option value='noteq'> doesn't equal (not exact match)</option>
+		<option value='beg'> begins with </option>
+		<option value='notbeg'> doesn't begin with </option>
+		<option value='end'> ends with </option>
+		<option value='notend'> doesn't end with </option>
+		<option value='cont'> contains </option>
+		<option value='notcont'> doesn't contain </option>
+		<option value='empty'> is empty </option>
+		<option value='notempty'> not empty </option>
+	</Select> <input type='text' name='vba_condit_str_tbox' id='vba_condit_str_tbox' size='20'/> Then [do something]</div><br>
+	If you write And/Or conditions, you have to use a full condition after And/Or (full condition in bold)<br>
+	To test your condition, replace [var/cellRef] with a str/number, and put the condition in a messagebox like:<br>
+	<ul>
+	
+	<span class="codes">MsgBox(Range("A1").Value = "This text")</span> (Is A1's value "This text"?)<br>
+	<span class="codes">MsgBox("Alphabet Inc" Like "*Inc")</span> (ends with "Inc"?)<br>
+	<span class="codes">MsgBox("Alphabet Inc" Like "*Inc" And Not "Alphabet Inc" Like "*Alphabet*")</span> (ends with "Inc", and doesn't contain "Alphabet"?)
+	</ul>
+	To do case insensitive comparison, use the LCase() or UCase() functions like:<br>
+	<ul>
+		<span class="codes">MsgBox(UCase("Alphabet") = "ALPHABET")</span><br>
+	</ul>
+</div>
+
+<!--VBA 1st steps-->
+<div class='inputfield' id='vbaBasics_basics_div' style='display: none;'>
+	To turn on the Developer module:<br>
+	<ul>
+		<li>On the <b>File</b> tab, go to <b>Options > Customize Ribbon</b>.</li>
+		<li>Under <b>Customize the Ribbon</b> and under <b>Main Tabs</b>, select the <b>Developer</b> check box.</li>
+		<li>On the <b>Developer</b> tab click on the <b>Visual Basic</b> button.</li>
+	</ul><br>
+	Addins are basically Excel files with hidden sheets. You can switch between the open files in the VBA window.<br>
+	Macros are written in <b>Modules</b>, a Module can contain multiple <b>Procedures</b>.<br>
+	A button on the ribbon can only call one procedure, but that procedure can call others.<br>
+	In ICMaddin and MQaddin every procedure is public, that means you can call them from any module.<br>
+	Unless otherwise stated, variables are private, that means they can't be used outside a procedure or module.<br><br>
+	<b>Indentation doesn't matter</b>, but can make your code more readable.<br>
+	Each statement is written in a new line.<br><br>
+	To <b>save ICMaddin</b> press Ctrl+S when a module is open in VBA.<br>
+	In this html if you see something like [var] or [Range].* it means you have to use a variable, or a range reference.<br>
+	You don't write variables or ranges between [], it only signifies to use your own.<br><br>
+	If you found a mistake/a code changed, contact: Pal.Szoboszlay@iongroup.com
+	</div>
+
+<!--2. VBA Range References-->
+<div class='inputfield' id='vbaBasics_rangeref_div' style='display: none;'>
+<span class="titles">Very basics</span><br>
+These examples are only for the references. To test them, write e.g. <span class="codes">Range("A1").Select</span><br>
+<b><u>When you do something to these references, you don't need to select them in your code! (unless necesarry like Souper Filter)</u></b><br><br>
+Range references are hierarchical in VBA. An example for <b><u>full reference</u></b>:<br>
+<span class="codes">Workbooks("RawFileLoader.xlsx").Worksheets("Sheet1").Range("A1")</span><br>
+Most of the time you want to use the <b><u>active workbook and active sheet</u></b>.<br>
+Although you could write it like this: <span class="codes">ActiveWorkbook.ActiveSheet.Range("A1")</span><br>
+VBA assumes that you want to work with them, so <span class="codes">Range("A1")</span> is the same as above.<br>
+Most of the time you won't need to specify anything else than a range.<br><br>
+
+<b><u>Do I have to write the full reference if it's important to specify the workbook or sheet?</u></b><br>
+No, you can 1) <u>assign it to a variable:</u><br>
+<div class="code_snip">
+	Set Rg = Workbooks("RawFileLoader.xlsx").Worksheets("Sheet1")<br>
+	Rg.Range("A1")
+</div><br>
+2) <u>Use the With function</u><br>
+<div class="code_snip">
+	With Workbooks("RawFileLoader.xlsx").Worksheets("Sheet1")<br>
+	.Range("A1")<br>
+	End With
+</div><br>
+3) <u>Use the activate method</u><br>
+<div class="code_snip">
+	Workbooks("RawFileLoader.xlsx").Worksheets("Sheet1").Activate<br>
+	Range("A1")
+</div><br>
+4) Or <u>check with an If statement if you are on the correct sheet</u><br><hr>
+
+<span class="titles">Range references</span><br>
+The 2 most important workbook references are above. Rest of most used:<br>
+<b>Worksheet(s)</b><br>
+<ul>
+	<li><span class="codes">Worksheets</span> (it's a collection, you can use it in a for each loop)</li>
+	<li><span class="codes">Worksheets("Sheet1")</span> - ws named Sheet1</li>
+	<li><span class="codes">Worksheets(1)</span> - 1st worksheet from the left</li>
+	<li><span class="codes">ActiveSheet</span></li>
+</ul>
+<b>All cells</b><br>
+<ul><li><span class="codes">Cells</span></li></ul>
+<b>One cell</b><br>
+<ul>
+	<li><span class="codes">Range("B4")</span></li>
+	<li><span class="codes">Range("B" & 4)</span></li>
+	<li><span class="codes">Cells(4,2)</span> - (row,col)</li>
+</ul>
+<b>A range</b><br>
+<ul>
+	<li><span class="codes">Range("B2:D4")</span></li>
+	<li><span class="codes">Range("B2","D4")</span></li>
+	<li><span class="codes">Range("B2","D" & 4)</span></li>
+</ul>
+<b>A row</b><br>
+<ul>
+	<li><span class="codes">Rows(2)</span></li>
+	<li><span class="codes">Range("A2").EntireRow</span> - useful in loops & find</li>
+</ul>
+<b>Multiple rows</b><br>
+<ul>
+	<li><span class="codes">Rows("2:5")</span></li>
+	<li><span class="codes">Range("A2:A5").EntireRow</span></li>
+</ul>
+<b>One column</b><br>
+<ul>
+	<li><span class="codes">Columns(2)</span></li>
+	<li><span class="codes">Columns("B")</span></li>
+	<li><span class="codes">Range("B2").EntireColumn</span></li>
+	<li><span class="codes">Range("B:B")</span></li>
+</ul>
+<b>Multiple columns</b><br>
+<ul><li><span class="codes">Range("B:E")</span></li></ul><hr>
+
+<span class="titles">How to reference a columns' non empty cells?</span><br>
+<b><u>See Snippets/Dynamic Range</u></b><br>
+When you select a column, you select 1048569 cells.<br>
+If you do something to this column, your macro will be very slow.<br>
+To make it fast, <u>you should only work with the cells that are not empty</u> (with a range).<br><br>
+You can press Ctrl-Down to go to the last non-empty cell in Excel.<br>
+There's a method that imitates this behavior, and with it you can <b>create dynamic ranges</b>.<br>
+One way to do it is like:<br>
+<span class="codes">Range("A1", <b>Cells(1, "A").End(xlDown)</b>)</span><br>
+It's not the most readable, especially if you are going up from the last cell on the sheet:<br>
+<span class="codes">Range("A1", <b>Cells(Cells.Rows.Count, "A").End(xlUp)</b>)</span><br><br>
+What you can do instead, is <b>either set the last cell to a variable</b>:<br>
+<div class="code_snip">
+	Set lastrow = Cells(Cells.Rows.Count, "A").End(xlUp)<br>
+	Range("A1", <b>lastrow</b>)
+	</div><br>
+	Or <b>Set the last cell's rownumber to a variable:</b><br>
+<div class="code_snip">
+	lastrow = Cells(Cells.Rows.Count, "A").End(xlUp).Row<br>
+	Range("A1", <b>"A" & lastrow</b>)
+</div><br><br>
+Maybe you want to <b>delete everything after going down in a column</b>:<br>
+<div class="code_snip">
+	Set lRow = Cells(1, "A").End(xlDown).Offset(1, 0).EntireRow<br>
+	Set veryLrow = Cells(Cells.Rows.Count, "A").EntireRow<br>
+	Range(lRow, veryLrow).Clear
+</div>
+<br><hr>
+
+<span class="titles">Dynamic range with find</span><br>
+You might have a report where rows are between like: Bonds ... Total Bonds<br>
+To delete these rows, you can use the Find function to create a range:<br>
+<div class="code_snip">
+	With Range("A1", Cells(Cells.Rows.Count, "A").End(xlUp))<br>
+	&emsp;<b>Set startRg</b> = .Find(What:="Bonds", LookAt:=xlWhole, LookIn:=xlValues, SearchOrder:=xlByRows, SearchDirection:=xlNext, MatchCase:=False)<br>
+	&emsp;<b>Set endRg</b> = .Find(What:="Total Bonds", LookAt:=xlWhole, LookIn:=xlValues, SearchOrder:=xlByRows, SearchDirection:=xlNext, MatchCase:=False)<br>
+	End With<br><br>
+	If Not startRg Is Nothing And Not endRg Is Nothing Then<br>
+	&emsp;<b>Range(startRg, endRg).EntireRow.Delete</b><br>
+	End If
+</div><br><hr>
+<span class="titles">Other Range references that might be useful</span><br>
+If you want to reference another cell in relation to a cell, use Offset (VBA Basics/Offset)<br>
+A Range with only numbers as references:<br>
+<ul>
+	<li><span class="codes">Range(Cells(2,2), Cells(4,4))</span></li>
+</ul>
+Seperate cells:<br>
+<ul>
+	<li><span class="codes">Range("B2, D4")</span> - NOT Range("B2", "D4")!!</li>
+	<li><span class="codes">Union(Range("B2"), Range("D4"))</span> - or Union(Cells(2,2), Cells(4,4))</li>
+</ul>
+Seperate ranges:<br>
+<ul>
+	<li><span class="codes">Range("B2:D4, F3:G5")</span></li>
+	<li><span class="codes">Union(Range("B2:D4"), Range("F3:G5"))</span></li>
+	<li><span class="codes">Union(Range(Cells(2,2), Cells(4,4)), Range(Cells(3,6), Cells(5,7)))</span></li>
+</ul>
+Seperate rows:<br>
+<ul>
+	<li><span class="codes">Union(Rows("2:5"), Rows("8:10"))</span></li>
+</ul>
+Seperate columns:<br>
+<ul>
+	<li><span class="codes">Range("B:E, G:H")</span></li>
+	<li><span class="codes">Range("B2:E5, G6:H7").EntireColumn</span></li>
+	<li><span class="codes">Union(Range(Columns(2), Columns(5)), Range(Columns(8), Columns(10)))</span></li>
+</ul>
+
+</div>
+
+<!--VBA Basics Arrays-->
+<div class='inputfield' id='vbaBasics_arrays_div' style='display: none;'>
+<span class="titles">What's an array and when should you use one?</span><br>
+An array is a special variable, which can hold more than one value at a time.<br>
+VBA arrays are similar to Python lists ([]) in functionality, but they differ in a lot of ways.<br>
+The 2 <u>main reasons to use arrays</u> are:<br>
+<ul>
+	<li>1. They can <b>make your code more readable</b>.</li>
+	<li>2. They can <b>make your code faster</b>.</li>
+	<li>(+ You might want to <b>avoid the clipboard</b> when moving data)</li>
+</ul><hr>
+
+<span class="titles">1. Make your code more readable</span><br>
+You might have a macro with 10 replace rows or more that's doing the same thing only with different strings.<br>
+In this case you can make your code more readable by adding these 10 strings to an Array, and looping through them.<br>
+There's a different section for array loops, the important thing here is to understand the concept:<br>
+<div class="code_snip">
+	<i>'This way of creating an array is similar to Python's lists:</i><br>
+	<i>'First you create a variable as Variant:</i><br>
+	&emsp;<b>Dim arr As Variant</b><br>
+	<i>'Then you populate the array with a list of items:</i><br>
+	&emsp;<b>arr = Array</b>("*Fund", "preferred*", "Short term*", "*cvr")<br>
+	<i>'Finally you loop through this array, and use the variable in the replace function:</i><br>
+	&emsp;<b>For each item in arr</b><br>
+	&emsp;&emsp;[Range].Replace What:=<b>item</b>, Replacement:="", LookAt:=xlWhole, SearchOrder:=xlByRows, MatchCase:=False<br>
+	&emsp;<b>Next item</b>
+</div><br>
+<b><u>This is just 5 rows instead of 10, and you can easily see what's the function is doing, add another keyword etc.</u></b><br><br>
+<b><u>You can also loop this list in another loop, so for example you can delete* rows based on the list's values.</u></b><br>
+*You shouldn't actually delete rows in a loop similar to this, this loop only clears the values in the row.<br>
+<div class="code_snip">
+	Dim arr2 As Variant<br>
+	arr2 = Array("*UCITS", "*Rights", "*bond*")<br>
+	For each cell in [Range]<br>
+	&emsp;For each item in arr2<br>
+	&emsp;&emsp;If cell.Value Like item Then cell.EntireRow.Clear<br>
+	&emsp;Next item<br>
+	Next cell
+</div><br>
+<b>Ok, but what to do when I have 100 Replace rows, and they are all different? See <u>Database logic</u>!</b><hr>
+
+<span class="titles">2. Make your code faster</span><br>
+Looping through and modifying an array is significantly faster than doing the same with cells.<br>
+This <u>doesn't mean that you should always work with arrays</u>.<br>
+<ul>
+	<li>There are cases in which looping the cells is necesarry (e.g. coloring them)</li>
+	<li>It might not worth the extra effort of working with arrays to gain a few seconds</li>
+</ul>
+Otherwise this is one of the easiest ways of speeding up your code.<br><br>
+Ran a script that compared 487 cells to 487 other cells & replaced matching cells' values<br>
+<ul>
+	<li>For i, For g nested range loop avg. time: 5 seconds</li>
+	<li>For Each nested range loop avg. time: 0.6 second</li>
+	<li>For Each range, For Each array avg. time 0.3 second</li>
+	<li>For Each array, Replace function avg. time 0.2 second</li>
+	<li>For i, For Each/For g nested array loop avg. time: 0.07 second</li>
+</ul>
+However: <b>the more VBA has to do something on the sheet, the slower it is.</b><br>
+E.g. If you do the comparison with nested array loops, but replace on the sheet, avg. time is 0.1 second<br>
+If you also turn the cells to bold, avg. time is 0.2 second<br><hr>
+
+<span class="titles">2b) Avoid the clipboard</span><br>
+You can <b><u>read what's on the sheet into an array</u></b> by assigning a range to a variable (Dim [var] As Variant).<br>
+<span class="codes">arr = Range("A1:A200")</span><br>
+You can <b><u>write this array back to sheet</u></b> by reverse:<br>
+<span class="codes">Range("B1:B200") = arr</span><br><br>
+This is how (bulk)swap columns work, instead of the inbuilt copy-paste functions.<br>
+If you <u>only want to copy a range to another</u>, you can write:<br>
+<span class="codes">Range("A1:A200") = Range("B1:B200")</span><br>
+Why arrays are better is that after you put everything into them, you can clear the sheet before writing back.<br>
+Both methods are faster and safer than using the clipboard.<br><hr>
+
+<span class="titles">3) Looping the array</span><br>
+1) <b><u>You only want to read from the array</u></b>:<br>
+You can use For Each:<br>
+<div class="code_snip">
+	arr = Range("A1:A200")<br>
+	For Each cell in Range("B1:B200")<br>
+	&emsp;<b>For Each item in arr</b> 'item is a variable name, you can change it<br>
+	&emsp;&emsp;If cell.Value = item Then cell.Font.Bold = True<br>
+	&emsp;<b>Next item</b><br>
+	Next cell
+</div><br>
+This method can also save you the trouble of working with nested For Loops<br><br>
+
+2) <b><u>You want to modify the array</u></b>:<br>
+This can only be achieved with For Loops.<br>
+<b>Important</b>: When you read a range into an array, even if it's one column, the array will be 2 dimensional!<br>
+<div class="code_snip">
+	arrA = Range("A1:A200")<br>
+	arrB = Range("B1:B200")<br>
+	<b>For i = LBound(arrB) To UBound(arrB)</b><br>
+	&emsp;For Each Item In arrA<br>
+	&emsp;&emsp;'Notice that <b>we have to reference the second dimension of the array (x,1)</b><br>
+	&emsp;&emsp;If arrB(i, 1) = Item Then arrB(i, 1) = "Matched"<br>
+	&emsp;Next Item<br>
+	<b>Next i</b><br>
+	Range("B1:B200") = arrB
+</div><br><br>
+
+3) <b><u>Lower and Upper bounds</u></b><br>
+Arrays have 2 <u>inbuilt functions for returning their size</u><br>
+<ul>
+	<li>Lowest 'row': <span class="codes">LBound([arr])</span> or <span class="codes">LBound([arr], 1)</span></li>
+	<li>Lowest 'col': <span class="codes">LBound([arr], 2)</span></li>
+	<li>Largest 'row': <span class="codes">UBound([arr])</span> or <span class="codes">UBound([arr], 1)</span></li>
+	<li>Largest 'col': <span class="codes">UBound([arr], 2)</span></li>
+</ul><br>
+When you read from range to array, LBound will always be 1.<br>
+You should keep that in mind if you write array based range modifications.<br>
+Arrays not read from the workbook starts from 0 unless <a href="https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/option-base-statement" target="_blank">Option Base is declared</a><br><br>
+This is a loop for comparing C1:C200 to a 2 dimensional array and replace matching strings with "Matched"<br>
+<div class="code_snip">
+	arrAB = Range("A1:B200")<br>
+	arrC = Range("C1:C200")<br>
+	&emsp;<b>For col = LBound(arrAB, 2) To UBound(arrAB, 2)</b><br>
+	&emsp;&emsp;<b>For Row = LBound(arrAB) To UBound(arrAB)</b><br>
+	&emsp;&emsp;&emsp;For Each Item In arrC<br>
+	&emsp;&emsp;&emsp;&emsp;If arrAB(Row, col) = Item Then <b>arrAB(Row, col) = "Matched"</b><br>
+	&emsp;&emsp;&emsp;Next Item<br>
+	&emsp;&emsp;<b>Next Row</b><br>
+	&emsp;<b>Next col</b><br>
+	Range("A1:B200") = arrAB
+</div><br><hr>
+
+<span class="titles">4) Creating your own array</span><br>
+You might want to create an empty array and populate it, or just modify an array you read from the workbook.<br>
+You already know how to create a one dimensional array (see: <i>Make your code more readable</i>)<br>
+In Python you would do it like this: arr = [[1,2,3], [4,5,6]]<br>
+In VBA, <b><u>if you want to create your own array:</u></b><br><br>
+1) You already know the boundaries and don't want to modify  it later:<br>
+<div class="code_snip">
+	Dim arr(1 To 2, 1 To 3) As Long<br>
+	arr(1,1) = 1<br>
+	arr(1,2) = 2<br>
+	arr(1,3) = 3<br>
+	arr(2,1) = 4<br>
+	arr(2,2) = 5<br>
+	arr(2,3) = 6<br>
+	Range("A1:C2") = arr
+</div><br><br>
+
+2) You don't yet know the boundaries:<br>
+<div class="code_snip">
+	'When you create an array As anything other than Variant, use brackets after the arr name<br>
+	Dim arr() As Long<br>
+	<b><u>Redim</u></b> arr(1 To 2, 1 To 3)<br>
+	[The same code as above]
+</div><br>
+If you use Redim, the content of your array will be deleted<br><br>
+
+3) You just want to extend your existing array:<br>
+<div class="code_snip">
+	Dim arr As Variant<br>
+	arr = Range("A1:C2")<br>
+	<b><u>ReDim Preserve</u></b> arr(1 To 2, 1 To 4)<br>
+	arr(1, 4) = 0<br>
+	arr(2, 4) = 0<br>
+	Range("A1:D2") = arr
+</div><br>
+If you use Redim Preserve you keep the content of your array.<br><br>
+<b><u>You can only modify the upper bound of the second dimension!</u></b><br>
+If you want to 'add more rows', you have to transpose the array:<br>
+<div class="code_snip">
+	Dim arr As Variant<br>
+	arr = Range("A1:C2")<br>
+	<b><u>arr = WorksheetFunction.Transpose(arr)</u></b><br>
+	ReDim Preserve arr(1 To 3, 1 To 3)<br>
+	arr(1, 3) = 5<br>
+	arr(2, 3) = 6<br>
+	arr(3, 3) = 7<br>
+	arr = WorksheetFunction.Transpose(arr)<br>
+	Range("A1:C3") = arr<br>
+</div><br><br>
+<span class="titles">5) Other Array functions</span><br>
+<ul>
+	<li><a href="https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/isarray-function" target="_blank">Check if a variable is an array</a>: <span class="codes">IsArray([arr])</span></li>
+	<li><a href="https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/filter-function" target="_blank">Filter a one dimensional array</a>: <span class="codes">Filter([arr], "string")</span></li>
+	<li><a href="https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/split-function" target="_blank">Split a string ~Data/Text To Columns</a>: <span class="codes">Split("string", "delimiter")</span></li>
+	<li><a href="https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/join-function" target="_blank">Join array (e.g. what you split)</a>: <span class="codes">Join([arr], "delimiter")</span></li>
+</ul>
+If you want to add or remove lot of things to an array at runtime, consider using <a href="https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/collection-object" target="_blank">Collection objects</a> or the VBA ArrayList library.
+</div>
+
+<!--VBA AutoFilter-->
+<div class='inputfield' id='vbaBasics_autofilter_div' style='display: none;'>
+Technically, you can do 2 things with AutoFilter in Excel:<br>
+<ul>
+	<li>Make only exact matches in a column visible.</li>
+	<li>Filter a column with a conditional statement.</li>
+</ul>
+AutoFilter will always include the first row of the range you filter as header!<br>
+AutoFilter is not case sensitive!<br><br>
+<span class="titles">Replicating the exact match function</span><br>
+This is like selecting manually what to display:<br>
+<span class="codes">Range("A1:A10000").AutoFilter Field:=1, Criteria1:=Array("Future PLC", "BNP Paribas SA", "Apple Inc"), Operator:=xlFilterValues</span><br>
+This doesn't let you use wildcards ("Future*", "BNP*") unlike:<br><br>
+
+<span class="titles">Replicating the Custom Filter function (text)</span><br>
+When you use Custom AutoFilter, you can specify two criterias and a condition for each.<br>
+Here the <b><u>condition</u></b> goes to the criteria parameters.<br>
+<ul>
+	<li><b>blank cells</b>: <span class="codes">Criteria1:="="</span></li>
+	<li><b>non-blank cells</b>: <span class="codes">Criteria1:="&#60;>"</span></li>
+	<li><b>equals</b>: <span class="codes">Criteria1:="text"</span> or a number</li>
+	<li><b>does not equal</b>: <span class="codes">Criteria1:="&#60;>text"</span> or a number</li>
+	<li><b>begins with</b>: <span class="codes">Criteria1:="text*"</li>
+	<li><b>does not begin with</b>: <span class="codes">Criteria1:="&#60;>text*"</li>
+	<li><b>ends with</b>: <span class="codes">Criteria1:="*text"</li>
+	<li><b>does not end with</b>: <span class="codes">Criteria1:="&#60;>*text"</li>
+	<li><b>contains</b>: <span class="codes">Criteria1:="*text*"</li>
+	<li><b>does not contain</b>: <span class="codes">Criteria1:="&#60;>*text*"</li>
+	<li><b>is greater than</b>: <span class="codes">Criteria1:=">0"</li>
+	<li><b>greater or equal</b>: <span class="codes">Criteria1:=">=0"</li>
+	<li><b>is less than</b>: <span class="codes">Criteria1:="&#60;0"</li>
+	<li><b>less or equal</b>: <span class="codes">Criteria1:="&#60;=0"</li>
+</ul><br>
+<u>To use two criterias, you have to use the <b>Operator parameter</b><br></u>
+Greater than 0, less than 100:<br>
+<span class="codes">Range("E1:E10000").AutoFilter Field:=1, Criteria1:=">0", <b>Operator:=xlAnd</b>, Criteria2:="&#60;100"</span><br>
+Name starts with Future or with BNP:<br>
+<span class="codes">Range("A1:A10000").AutoFilter Field:=1, Criteria1:="Future*", <b>Operator:=xlOr</b>, Criteria2:="BNP*"</span><br>
+<a href="https://docs.microsoft.com/en-us/office/vba/api/excel.xlautofilteroperator" target="_blank">There are more operators</a> with which you can get the top or bottom 10 items, filter by cell/font color etc.<br><br>
+
+<span class="titles">Working with multiple columns:</span><br>
+You can filter multiple columns just as manually:<br>
+<div class="code_snip">
+	'This might be good for filtering Total amounts where the share number is missing:<br>
+	With Range("A1:E10000")<br>
+	&emsp;.AutoFilter <b>Field:=1</b>, Criteria1:="Total*" 'Field 1 is the first column in your range<br>
+	&emsp;.AutoFilter <b>Field:=5</b>, Criteria1:="="<br>
+	End With
+</div><br>
+Keep in mind that you can't apply more criterias to the same field!<br><br>
+
+<span class="titles">Remove the filter:</span><br>
+<span class="codes">ActiveSheet.AutoFilterMode = False</span><br><hr>
+
+<span class="titles">What can I do with the filtered data?:</span><br>
+<b><u>Use it instead of a loop to clear data:</u></b><br>
+You want to clear rows that match a certain condition. You can easily do that with AutoFilter:<br>
+<div class="code_snip">
+	Rows(1).Insert<br>
+	With Range("E1:E10000")<br>
+	&emsp;.AutoFilter Field:=1, Criteria1:="<0"<br>
+		&emsp;.Clear<br>
+	End With<br>
+	ActiveSheet.AutoFilterMode = False<br>
+	Range("E:E").Select<br>
+	ICM_souper_filter<br>
+</div><br>
+<u>Notice the first row, where we insert a row!</u><br>
+This is because if you have no header, and the number in the first row is larger than 0, it would also be cleared.<br>
+You might try clearing from E2, but then if E1 is a negative number, you won't delete that.<br><br>
+
+<b>You can also write to a range or do some visual stuff:</b><br>
+<div class="code_snip">
+	Rows(1).Insert<br>
+	Set lastA = Cells(Cells.Rows.Count, "A").End(xlUp)<br>
+	Range("A1", lastA).AutoFilter Field:=1, Criteria1:="* Right*"<br>
+	Range("A1", lastA).Font.Bold = True<br>
+	Range("B1", "B" & lastA.Row).Value = "Right"<br>
+	ActiveSheet.AutoFilterMode = False<br>
+	Rows(1).Delete
+</div><br><br>
+
+<b>You can also set what's found to a range object & loop it:</b><br>
+This is only as an example:<br>
+<div class="code_snip">
+	Rows(1).Insert<br>
+	Range("A1:A10000").AutoFilter Field:=1, Criteria1:="* Right*"<br>
+	'Set AutoFilter results (only column D's used visible cells) to a range object<br>
+	On Error GoTo NotFound 'If nothing was found it would return an error<br>
+	&emsp;Set filtered = ActiveSheet.UsedRange.Columns("D").SpecialCells(xlCellTypeVisible)<br>
+	On Error GoTo 0<br>
+	ActiveSheet.AutoFilterMode = False<br>
+	For Each cell In filtered<br>
+	&emsp;cell.Value = cell.Value * 1000<br>
+	Next cell<br>
+	NotFound:<br>
+	Rows(1).Delete
+</div><br>
+(The same can be written in a 3 lines loop, so use the above code if absolutely necesarry)<br>
+<div class="code_snip">
+	For Each cell In Range("A1:A1000")<br>
+	&emsp;If cell.Value Like "*right*" Then Range("D" & cell.Row).Value = Range("D" & cell.Row).Value * 1000<br>
+	Next
+</div><br><br>
+<b>Copy the results to a new sheet:</b><br>
+<div class="code_snip">
+Set ws = ActiveSheet<br>
+ws.Rows(1).Insert<br>
+ws.Range("A1:A1000").AutoFilter Field:=1, Criteria1:="* Right*"<br>
+ws.UsedRange.SpecialCells(xlCellTypeVisible).Copy<br>
+Worksheets("Sheet1").Range("A1").PasteSpecial<br>
+ws.Rows(1).Delete
+</div>
+</div>
+
+<!--VBA Basics Conditional statements-->
+<div class='inputfield' id='vbaBasics_condition_div' style='display: none;'>
+Conditional statements are essential to automate decision-making.<br>
+They can be grouped in 4 categories:<br>
+<span class="titles">If ... Then</span><br>
+You only want to specify what to do if a condition is met (if it's not met, nothing happens)<br>
+If it's one statement, you can write one-liners this way:<br>
+<span class="codes"><b>If</b> Range("A1").Value Like "*Bond Fund" <b>Then</b> Exit Sub</span><br>
+- One typical case for this is that you don't want the macro/a block to run if a condition is met.<br>
+- They are often used in loops, for examples see the Loops menu.<br><br>
+Let's assume that you also want to notify the user why the macro won't run.<br>
+In this case you write your statements in new lines and end the If block with <span class="codes">End If</span>:<br>
+<div class="code_snip">
+	If Range("A1").Value Like "*Bond Fund" Then<br>
+	&emsp;MsgBox("The macro won't run, as it's a fixed income fund.")<br>
+	&emsp;Exit Sub<br>
+	<b>End If</b>
+</div><br>
+<hr>
+
+<span class="titles">If ... Else</span><br>
+You want to specify two cases:<br>
+<div class="code_snip">
+	lastD = Cells(Cells.Rows.Count, "D").End(xlUp)<br>
+	For Each cell In Range("D1", lastD)<br>
+	&emsp;If IsNumeric(cell) Then<br>
+	&emsp;&emsp;cell.Value = cell.Value * 0.001<br>
+	&emsp;<b>Else</b><br>
+	&emsp;&emsp;cell.Clear<br>
+	&emsp;End If<br>
+	Next
+</div><br>
+- This divides the cell's value if it's a number, and clears the cell if it's not.<br>
+<hr>
+
+<span class="titles">If ... ElseIf ... Else</span><br>
+You want to specify some cases and use Else for every other<br>
+<div class="code_snip">
+	lastD = Cells(Cells.Rows.Count, "D").End(xlUp)<br>
+	For Each cell In Range("D1", lastD)<br>
+	&emsp;If IsNumeric(cell) Then<br>
+	&emsp;&emsp;cell.Value = cell.Value * 0.001<br>
+	&emsp;<b>ElseIf</b> cell.Value = "-" Then<br>
+	&emsp;&emsp;cell.Value = 0<br>
+	&emsp;<b>Else</b><br>
+	&emsp;&emsp;cell.Clear<br>
+	&emsp;End If<br>
+	Next
+</div><br>
+- This is the same code, except we replace -s with zeros in the loop.<br>
+<hr>
+
+<span class="titles">If ... ElseIf</span><br>
+Finally you can write conditional statements without Else statements.<br>
+For an example see the MessageBoxes menu, but here's another one:<br>
+<div class="code_snip">
+	If Range("A1").Value = "Issue Name" Then<br>
+	&emsp;[macro1]<br>
+	<b>ElseIf</b> Range("A1").Value = "Fund name" Then<br>
+	&emsp;[macro2]<br>
+	End If<br>
+</div><br>
+- Here the macro chooses between two subroutines to run based on A1's value.<br>
+<hr>
+
+<span class="titles">Multiple conditions</span><br>
+You can alter or add conditions with <u><b>LOGICAL OPERATORS</b></u>.<br>
+To check multiple conditions, use <b>AND</b><br>
+<span class="codes">If Range("A1").Value Like "*Bond Fund" <b>And</b> Range("D1").Value Like "*Fixed Income*" Then Exit Sub</span><br>
+To specify some conditions that lead to the same statement use <b>OR</b>:<br>
+<span class="codes">If Range("A1").Value Like "*Bond Fund" <b>Or</b> Range("A1").Value Like "*Treasury*" Then Exit Sub</span><br>
+To make a oneliner with a function that would return False, use <b>NOT</b>:<br>
+<span class="codes">If <b>Not</b> IsNumeric(Range("A1")) Then Range("A1").Clear</span><br><br>
+If you want to run a lot of conditional checks with the same outcome, you might want to <u><b>LOOP THE TEST STRINGS</b></u>:<br>
+<div class="code_snip">
+	Dim fixed, str as Variant<br>
+	fixed = Array("*Fixed Income*", "*Bond*", "*Treasury*")<br>
+	For Each str in fixed<br>
+	&emsp;If Range("A1").Value Like str & "Fund" Then Exit Sub<br>
+	Next
+</div><br>
+- This is similar to the OR operator, but more readable if you work with 3+ conditions.<br><br>
+A third way is <u><b>SELECT CASE</b></u>.<br>
+It's very similar to ElseIf, but you don't need cell reference in every row.<br>
+The test case and condition has to be the same data type, so e.g. the <a href="https://stackoverflow.com/questions/18409418/excel-vba-select-case-if-activecell-like-string" target="_blank">Like comparison operator won't work with this example</a>:<br>
+<div class="code_snip">
+	<b>Select Case</b> Range("A1").Value <b>'This is what we test</b><br>
+	<b>Case</b> "Bond Fund": Exit Sub <b>'This is a condition and statement in one line (notice :)</b><br>
+	Case "Fixed Income Fund" <b>'This is a condition and statements in multiple lines</b><br>
+	&emsp;MsgBox("The macro won't run, as it's a fixed income fund.")<br>
+	&emsp;Exit Sub<br>
+	Case "everything", "nuts" To "soup": MsgBox("The word is 'everything' or between nuts and soup [alphabetic order]")<br>
+	Case 1 To 5: MsgBox("This is a number between 1 to 5.")<br>
+	Case 6, 8: MsgBox("Either 6 or 8.")<br>
+	Case Is <= 75: MsgBox("Number that's equal or smaller than 75")<br>
+	Case Is = 74: MsgBox("The number is 74") <b>'This won't run because 74 is already smaller than 75, order is important!</b><br>
+	<b>Case Else:</b> MsgBox("Else statement is optional.")<br>
+	<b>End Select</b>
+</div>
+
+<hr>
+
+<span class="titles">Functions and other</span><br>
+<span class="codes"><b>GoTo</b></span> can be used with if statements.<br>
+You can write a label in your procedure ([labelname]:) and if the condition is true, the next statement will be under the label.<br>
+This is useful to skip some statements. If the condition is false, every statement will run (the label doesn't end the procedure.)<br>
+<div class="code_snip">
+	If Range("A1").Value = "Something" Then <b>GoTo MyLabel</b><br>
+	MsgBox("This only runs if the condition is False")<br>
+	<b>MyLabel:</b><br>
+	MsgBox("This runs either way.")<br>
+</div><br><br>
+<b>Inbuilt functions</b> that are useful:<br>
+<ul>
+	<li><span class="codes">IsEmpty(variable/range)</span> - Returns True if the cell/variable is empty</li>
+	<li><span class="codes">IsMissing(variable)</span> - Returns True if the optional argument wasn't passed to the procedure</li>
+	<li><span class="codes">IsNumeric(variable/range)</span> - Returns True if the cell/variable is a number</li>
+	<li>Others: IsArray, IsDate, IsError, IsNull, IsObject</li>
+</ul>
+</div>
+
+<!--VBA Basics Dictionaries-->
+<div class='inputfield' id='vbaBasics_dict_div' style='display: none;'>
+This part isn't written yet.
+</div>
+
+<!--VBA Basics Error handling/Debugging-->
+<div class='inputfield' id='vbaBasics_error_div' style='display: none;'>
+VBA is pretty great at highlighting errors you made in the code.<br>
+If you make syntax or compilation errors, your code won't run and VBA will warn you.<br>
+(Some examples for these: missing "Then" after If statements, missing "Next" in a For loop etc.)<br>
+However you will get errors when your code is well written and you might want to deal with them.<br><br>
+
+<span class="titles">Error handling</span><br>
+Creating your own error messages is more understandable than default VBA statements.<br>
+Even if your code just wouldn't do anything, it's more responsive to return a MsgBox with a warning ("The macro didn't run.")<br>
+Of course in these cases you have to specify when to return these messages, and if it's not a VBA error you do it with:<br>
+<u><b>IF STATEMENTS</b></u><br>
+The best way to write error messages is to have a block for error handling, and the rest of the code shouldn't be part of the if statement.<br>
+Let's think of the Copy To RawFileLoader sub. Your code can be written like:<br>
+<div class="code_snip">
+	<del>If ActiveWorkbook.Name = "RawFileLoader.xlsx" Then<br>
+	MsgBox("This function can't be used in RawFileLoader")<br>
+	Exit Sub<br>
+	Else<br>
+	&emsp;ICM_copy2RFL<br>
+	&emsp;... [Your main code, a lot of rows] ...<br>
+	End If</del>
+</div><br>
+If you write your code this way, you can easily forget about the <b>End If</b>,<br>
+And if you try to understand the code later, you might not know what it is doing down there.<br><br>
+A way to write it is like how you see in the <b>ICM General/Copy To RawFileLoader menu.</b><br>
+But <u>you can leave out the Else part completely</u>, because no more code will run after <span class="codes">Exit Sub</span>.<br>
+Either way, the important thing is to seperate these blocks from the rest of your code that would normally run.<br><br>
+One of the best practices is to check a cell or more at the beginning of your code, and return an error if they are missing:<br>
+<div class="code_snip">
+	If Range("D1").Value <> "Shares" Then<br>
+	&emsp;MsgBox("Shares are not in col D in this report. The macro won't run.")<br>
+	&emsp;Exit Sub<br>
+	End If
+</div><br><br>
+<u><b>ERROR MESSAGES</b></u><br>
+There are 3 main ways to handle VBA error messages:
+<ul>
+	<li>The default behavior: Stop and display the error</li>
+	<li><span class="codes">On Error Resume Next</span> - Ignore the errors and continue on</li>
+	<li><span class="codes">On Error GoTo [label]</span> - Jump to a specific line (see Conditional Statements menu)</li>
+</ul>
+These might come handy if you are dealing with an error you don't know how to write as an if statement.<br><br>
+You might also see something like this in the addin:<br>
+<div class="code_snip">
+	On Error Resume Next<br>
+    [Range].Find...[.Clear]<br>
+    <b>On Error GoTo 0</b>
+</div><br>
+The last line replaces the Error handling behavior you previously set (resume next) with the default.<br>
+(So it will Stop and display the error if it finds another one.)<br>
+If you don't use it, if any Error comes up in your code, VBA will just move on.<br><br>
+
+<span class="titles">DEBUGGING</span><br>
+Finally, you may not know what's the problem, but you see that something's not working properly.<br>
+<u><b>STOP THE CODE:</b></u><br>
+Then one way to stop your code running at different places is the line: <span class="codes">Stop</span><br>
+This is similar to clicking on the grey left field next to a line in the Module window.<br>
+<u><b>CHECK VARIABLES:</b></u><br>
+When the code is stopped either way, you can hover over the variable names with the mouse and it will display their current value.<br>
+You can print variable values with <span class="codes">Debug.Print</span> in the Immediate Window (Ctrl-G)<br>
+If you work with arrays, you can see the content of an array variable in the <b>View/Watch Window</b> by right clicking the variable name and <b>Add Watch...</b><br>
+These are the most common ways to debug your code, but there are plenty of other options.
+</div>
+
+<!--VBA Basics Loops-->
+<div class='inputfield' id='vbaBasics_loop_div' style='display: none;'>
+	There's 2 main group of loops: Do ... Loops and For Loops<br>
+	For loops are more safe to use, but there are cases when Do Loops are necessary<br>
+	!<u>Don't delete rows when you are in a loop.</u> Clear them, and use Souper Filter, or just use the Replace Function!<br><br>
+	<span class="titles">For Loops</span><br>
+	There's 2 kinds of for loops: <b>For ... Next</b> & <b>For Each ... Next</b><br>
+	You can exit both of them with <span class="codes">Exit Loop</span><br>
+	Use them to loop ranges (including sheets, cells etc.), arrays, objects etc. (for arrays see the arrays menu)<br>
+	<b><u>For Each loops are faster than For Next loops when looping collections (Ranges, Sheets etc.)</u></b><br>
+	- Keep in mind that For Each's usage is more limited (can't loop string letters, can't reverse etc.)<br>
+	<hr>
+	The most basic use of a <b><u>For ... Next</u></b> loop is repeating a statement x times.<br>
+	However what it's mostly used for is <u>incrementing or decrementing a variable's value</u> while repeating statements.<br>
+	The default incrementation is +1 (this doesn't need to be stated), other values can be set with <b>Step 2/Step -1 etc.</b><br>
+	<ul>
+		<li><span class="codes">For i = 1 To 10</span> - increment i's value by one</li>
+		<li><span class="codes">For i = 1 To 10 Step 2</span> - increment i's value by two</li>
+		<li><span class="codes">For i = 10 To 1 Step -1</span> - decrement i's value by one</li>
+	</ul><br>
+	An <u>example</u> - looping til the first empty cell in A & writing in B if a condition is met:<br>
+	<div class="code_snip">
+		LastRow = Cells(1, "A").End(xlDown).Row<br>
+		<b>For i = 1 To</b> LastRow<br>
+		&emsp;If Range("A" & i).Value LIKE "*Rights" Then Range("B" & i).Value = "!Rts"<br>
+		<b>Next</b>
+	</div><br>
+	Notice that the row-reference (i) changes in each iteration!<br>
+	<hr>
+	The <b><u>For Each ... Next</u></b> loop has more specific applications.<br>
+	These are like Python for loops, and they are especially great if you don't want to work with nested for loops<br>
+	Here the variable is a reference/value, not a number that increments or decrements.<br>
+	To visualise the <u>difference between the two</u>, here's how to color cells in Range("A1", "C5") if they meet a condition:<br><br>
+	With <u>For Each</u> Loop:<br>
+	(cell is a variable here, you can write var or anything instead)<br>
+	<div class="code_snip">
+		<b>For Each</b> cell <b>in</b> Range("A1", "C5")<br>
+		&emsp;If cell.Value = 1 Then cell.Interior.ColorIndex = 35<br>
+		<b>Next</b>
+	</div><br><br>
+	With <u>For</u> Loop:<br>
+	<div class="code_snip">
+		For col = 1 To 3<br>
+		&emsp;For row = 1 To 5<br>
+		&emsp;&emsp;If Cells(row, col).Value = 1 Then Cells(row, col).Interior.ColorIndex = 35<br>
+		&emsp;Next row<br>
+		Next col
+	</div><br>
+	<hr>
+
+	<span class="titles">Do Loops</span><br>
+	The 2 keywords here are: While and Until. While loops run while a condition is True, Until loops run until a condition becomes True.<br>
+	To Exit a Do loop, use the <span class="codes">Exit Do</span> statement.<br><br>
+	There's 4 kinds of loops in this category. The first two check the condition first and <u>run 0 time if the condition is False</u>:<br>
+	<b>Do While</b> ... Loop & <b>Do Until</b> ... Loop<br><br>
+	The other 2 <u>run 1 time and only repeat if the condition is true</u>.<br>
+	Do ... <b>Loop While</b> & Do ... <b>Loop Until</b><br><br>
+	<u>An example</u> for this kind of loop could be Multiline Bottom:<br>
+	<div class="code_snip">Do Until Cells(1, "A").End(xlDown).Row = Cells(1, "D").End(xlDown).Row<br>
+		&emsp;ICM_multiline_highlight(False)<br>
+		&emsp;ICM_multiline_highlight(True)<br>
+	Loop</div>
+</div>
+
+<!--VBA Basics MessageBoxes-->
+<div class='inputfield' id='vbaBasics_message_div' style='display: none;'>
+	The <u>most simple messagebox</u> is useful for notifying the user of something:<br>
+	<span class="codes">MsgBox("output")</span><br>
+	To output multiple lines, use <span class="codes">& vbNewLine &</span> between output values.<br><br>
+	<b>vbYesNo</b> and <b>vbOKCancel</b> messageboxes are great for simple If or If-Else statements<br>
+	<span class="codes">If MsgBox("question", vbYesNo, "title") = <b>vbYes</b> Then ...</span><br>
+	If you want to specify what to do when the user click No, use <b>vbNo</b><br><br>
+	Finally messageboxes with more options like <b>vbYesNoCancel</b> should be used by storing the answer in a variable and with ElseIf statements.<br>
+	<div class="code_snip">myVar = MsgBox("question", vbYesNoCancel, "title")<br>
+		If myVar = vbYes Then...<br>
+		&emsp;ElseIf myVar = vbNo Then...<br>
+		&emsp;ElseIf myVar = vbCancel Then...<br>End If</div><br><br>
+	You can also create <b><a href="https://docs.microsoft.com/en-us/office/vba/api/excel.application.inputbox" target="_blank">inputboxes</a></b> and use userinput in your macros:<br>
+	<span class="codes">InputBox("Give me some input", "Title", 1)</span><br><br>
+	If you assign the user input to a variable, you should declare the variable as a type first.<br>
+	<div class="code_snip">
+		Dim InputValue As Double<br>
+		InputValue = InputBox("Give me some input", "Title", 1)<br>
+		Range("D1").Value = InputValue * 5
+	</div>
+</div>
+
+<!--VBA Basics Offset-->
+<div class='inputfield' id='vbaBasics_offset_div' style='display: none;'>
+	You can reference a cell in relation to another cell with offset.<br>
+	<b>Usage:</b><br>
+	<span class="codes">Range("A2").Offset(0,0)</span> => The selected cell is A2<br>
+	<span class="codes">Range("A2").Offset(0,1)</span> => The selected cell is B2<br>
+	<span class="codes">Cells(2,1).Offset(0,1)</span> => The selected cell is B2<br>
+<table class="offset_table">
+		<tr>
+			<td></td>
+			<td><font color="red">-1</font></td>
+			<td><font color="red">0</font></td>
+			<td><font color="red">1</font></td>
+		</tr>
+        <tr>
+			<td>-1</td>
+            <td>.Offset(-1, <font color="red">-1</font>)</td>
+            <td>.Offset(-1, <font color="red">0</font>)</td>
+            <td>.Offset(-1, <font color="red">1</font>)</td>
+        </tr>
+        <tr>
+			<td>0</td>
+            <td>.Offset(0, <font color="red">-1</font>)</td>
+            <td>.Offset(0, <font color="red">0</font>)</td>
+            <td>.Offset(0, <font color="red">1</font>)</td>
+        </tr>
+        <tr>
+			<td>1</td>
+            <td>.Offset(1, <font color="red">-1</font>)</td>
+            <td>.Offset(1, <font color="red">0</font>)</td>
+            <td>.Offset(1, <font color="red">1</font>)</td>
+        </tr>
+</table>
+</div>
+
+<!--VBA Basics Operators-->
+<div class='inputfield' id='vbaBasics_oper_div' style='display:none;'>
+	<span class="titles">Arithmatic Operators:</span><br>
+	Notice that there's no =+, =- etc. as in Python!<br>
+	<ul>
+		<li>Add numbers: <b>+</b></li>
+		<li>Subtract numbers: <b>-</b></li>
+		<li>Multiply numbers: <b>*</b></li>
+		<li>Divide numbers: <b>/</b></li>
+		<li>Modulus: <b>%</b></li>
+		<li>Exponentiation: <b>^</b></li>
+	</ul><br>
+	<span class="titles">Comparison Operators:</span><br>
+		Notice that there's no ==, != as in Python!<br>
+		These return True or False. The first 3 can be used dor string comparison.<br>
+		<ul>
+			<li>Equal?: <b>=</b></li>
+			<li>String equal? with wildcards: <b>LIKE</b></li>
+			<li>Not equal?: <b>&#60;&#62;</b></li>
+			<li>Greater than?: <b>&#62;</b></li>
+			<li>Smaller than?: <b>&#60;</b></li>
+			<li>Greater or equal than?: <b>&#62;=</b></li>
+			<li>Smaller or equal than?: <b>&#60;=</b></li>
+		</ul>
+		<u>String comparison is case sensitive!</u> <span class="codes">"Blackrock" = "BLACKROCK"</span> is False<br>
+		Case insensitive comparison: <span class="codes">UCase("Blackrock") = UCase("BLACKROCK")</span> is True<br>
+		<u>Difference between = and LIKE</u>: <span class="codes">"This text" = "This*"</span> is False, <span class="codes">"This text" LIKE "This*"</span> is True<br><br>
+		<span class="titles">Logical Operators:</span><br>
+		<ul>
+			<li>If any is false, return false: <b>AND</b></li>
+			<li>If any is true, return true: <b>OR</b></li>
+			<li>The opposite is true: <b>NOT</b></li>
+		</ul>
+		An example for NOT: <span class="codes"><b>Not</b> "This text" Like "This*"</span> Is False<br>
+		Another: <span class="codes"><b>Not</b> IsEmpty(Range("A1"))</span> - if A1 cell NOT empty, returns true (IsEmpty without NOT returns true if the cell IS empty)<br><br>
+		<span class="titles">The Concatenation Operator:</span><br>
+		<b>&</b> - <span class="codes">"Blackrock " & "Inc"</span> returns Blackrock Inc<br><br>
+		<span class="titles">Multi-row code:</span><br>
+		Long rows of codes are not easily readable.<br>
+		Luckily, you can make a statement multi-row with <b>_</b><br>
+		<div class="code_snip">
+			arr = Array("one", _<br>
+			"two")
+		</div><br>
+		Or:<br>
+		<div class="code_snip">
+			[Range].Replace What:="text", Replacement:="string", _<br>
+			LookAt:=xlPart, SearchOrder:=xlByRows, MatchCase:=False
+		</div><br>
+</div>
+
+<!--VBA Basics Range object-->
+<div class='inputfield' id='vbaBasics_rangeobject_div' style='display:none;'>
+	At its core, cells on Excel sheets are objects with properties and methods.<br>
+	<span class="titles">Properties:</span><br>
+	You can either get the current properties of a <a href="https://docs.microsoft.com/en-us/office/vba/api/excel.range(object)" target="_blank">Range</a> or change it.<br>
+	For example <span class="codes">Range("A1").Font.Bold</span> will return True or False, but you can set A1 to Bold with <span class="codes">Range("A1").Font.Bold = True</span><br>
+	Generally you can set multiple cells' properties, but only get one cell's with a statement.<br>
+	You can find the most important visual properties and methods under the VBABasics/Visuals menu.<br><br>
+	<span class="titles">Most important <u>Range Properties</u>:</span><br>
+	<ul>
+		<li><span class="codes">[Range]<b>.Value</b></span> - the unformatted value(s) of the Range</li>
+		<li><span class="codes">[Range]<b>.Text</b></span> - the formatted value(s) of the Range</li>
+		<li><span class="codes">[Range]<b>.Formula</b></span> = "=SUM(D:D)" - to insert a formula</li>
+		<li><span class="codes">[Cell]<b>.Column</b></span> - get the columnnumber</li>
+		<li><span class="codes">[Cell]<b>.Row</b></span> - get the rownumber</li>
+		<li><span class="codes">[Range]<b>.NumberFormat</b></span> - see: Other/Numberformat</li>
+	</ul><br>
+	<span class="titles">Most important <u>Range Methods</u>:</span><br>
+	<ul>
+		<li><span class="codes">[Range]<b>.Clear</b></span> - equivalent of pressing Delete</li>
+		<li><span class="codes">[Range].<b><a href="https://docs.microsoft.com/en-us/office/vba/api/excel.range.delete" target="_blank">Delete(optional Shift)</a></b></span> - equivalent of Right Click/Delete</li>
+		<li><span class="codes">[Range].<b><a href="https://docs.microsoft.com/en-us/office/vba/api/excel.range.insert" target="_blank">Insert</a></b></span> - equivalent of Right Click/Insert</li>
+		<li><span class="codes">[Range]<b>.AutoFilter</b></span></li>
+		<li><span class="codes">[Range]<b>.Select</b></span> - don't use it, unless necesarry</li>
+		<li>Others: Find, Replace, Sort</li>
+	</ul>
+</div>
+
+<!--VBA Basics Shortcuts-->
+<div class='inputfield' id='vbaBasics_shortcut_div' style='display:none;'>
+You can assign procedures to your own shortcuts.<br>
+For a detailed how-to <a href="https://docs.microsoft.com/en-us/office/vba/api/excel.application.onkey" target="_blank">click on this link</a>.<br>
+First you have to run your code:<br>
+<div class="code_snip">
+	'Assign ICM_divide to Ctrl-Shift-e<br>
+	Application.OnKey "^+{e}", "ICM_divide"
+</div><br>
+(As you see it's a two-arguments function: 1st is the string representation of the keys, 2nd is the procedure name)<br><br>
+<u>To reset this shortcut</u>, just leave the procedure name empty:<br>
+<span class="codes">Application.OnKey "^+{e}", ""</span><br><br>
+<u>To have this code automatically run</u> when you open the addin, place it in the Microsoft Excel Objects/ThisWorkbook module:<br>
+<div class="code_snip">
+	Sub Workbook_Open()<br>
+    Application.OnKey "^+{e}", "ICM_divide"<br>
+	End Sub
+</div>
+</div>
+
+<!--VBA Basics Sort-->
+<div class='inputfield' id='vbaBasics_sort_div' style='display:none;'>
+You can use this code to sort your sheet:<br>
+<div class="code_snip">
+	With ActiveSheet.Sort<br>
+	.SortFields.Clear 'Clearing the previous sort settings<br>
+	.SetRange Range("A1:O1000") 'the range that you sort<br>
+	.Header = xlYes 'xlNo if no header<br>
+	.MatchCase = False 'True if yes<br>
+	.SortFields.Add Key:=Range("D1"), Order:=xlDescending<br>
+	.SortFields.Add Key:=Range("A1"), Order:=xlAscending<br>
+	'add more if you like, key column must be in your range, the column can't be empty!<br>
+	.Apply<br>
+End With
+</div><br>
+Another way (although I recommend using the previous, as it's more defined):<br>
+<span class="codes">Range("A1:H1000").Sort Key1:=Range("A1"), Order1:=xlAscending</span><br>
+<a href="https://docs.microsoft.com/en-us/office/vba/api/excel.range.sort" target="_blank">For more information click</a>
+</div>
+
+
+<!--VBA Basics String functions-->
+<div class='inputfield' id='vbaBasics_strings_div' style='display:none;'>
+Most of the time you won't need anything else than the Like and = operators; the Find and Replace functions.<br>
+However there's some cases when you can't use them (e.g. arrays), or you run into another complication (like Replace removing leading zeroes etc.)<br>
+So here's some things you can do with string functions:<br><br>
+<span class="titles">Case sensitivity, proper, trim</span><br>
+VBA is case sensitive, so "ABC" doesn't equal "abc"<br>
+You can either change this on the module level (but this will change it for every procedure):<br>
+<ul><li><span class="codes">Option Compare Text</span> to the first line of the module, and = and Like won't be case sensitive</li></ul><br>
+Or you can sidestep this by using these functions:<br>
+<ul>
+	<li>To Lowercase 1 - <span class="codes"><b>LCase</b>("TEXT")</span></li>
+	<li>To Lowercase 2 - <span class="codes"><b>StrConv</b>("TEXT", vbLowerCase)</span></li>
+	<li>To Uppercase 1 - <span class="codes"><b>UCase</b>("text")</span></li>
+	<li>To Uppercase 2 - <span class="codes"><b>StrConv</b>("text", vbUpperCase)</span></li>
+	<li>Proper (words' 1st letters to ucase) - <span class="codes"><b>StrConv</b>("tEXT", vbUpperCase)</span></li>
+	<li>Trim (leading & trailing spaces) - <span class="codes"><b>Trim(</b>" Text&emsp;&emsp;and ")</span></li>
+	<li>Trim (l&tr spaces & double spaces) - <span class="codes"><b>Application.WorksheetFunction.Trim(</b>" Text&emsp;&emsp;and ")</span></li>
+	<li>Compare - <span class="codes">StrComp("text", "TEXT", vbTextCompare)</span></li>
+</ul><br>
+Compare with LCase: <span class="codes">If LCase(Range("A1").Value) Like LCase("*fund") Then ...</span><br>
+To modify a cell's content with these, you use them like this:<br>
+<span class="codes">Range("A1").Value = LCase(Range("A1").Value)</span><br>
+StrComp is only for strict comparisons (same as = but case insensitive). It returns 0 or -1. Use it with If statements.<br><hr>
+
+<span class="titles">Extracting substrings, 'cutting', 'text to columns'</span><br>
+You might want to rename a sheet, get the text from brackets etc. These functions will help you do that:<br>
+<ul>
+	<li>Get the first (x) characters - <span class="codes"><b>Left</b>("string", 4)</span> => stri</li>
+	<li>Get the last (x) characters - <span class="codes"><b>Right</b>("string", 4)</span> => ring</li>
+	<li>Get middle chars from char in length* - <span class="codes"><b>Mid</b>("string", 2, 3)</span> => tri</li>
+</ul>
+The mid function really works with the <b>InStr</b> and <b>Len</b> functions:<br>
+<div class="code_snip">
+	'You searched for "Invesco" to extract fund name and found this:<br>
+	found = "Financial Statements for Invesco Equity Fund"<br>
+	'You can return the position of the first char of Invesco:<br>
+	firstchar = <b>InStr(found, "Invesco")</b><br>
+	'You have to calculate how long is the fund name:<br>
+	lenOfFundname = <b>Len(found)</b> - (firstchar - 1) '-1 as we shouldn't include firstchar<br>
+	'Finally you extract it from firstchar to the calculated length<br>
+	fundname = Mid(found, firstchar, lenOfFundname)<br>
+	ActiveSheet.Name = Left(fundname, 31)
+</div><br>
+You can use the Left or Right functions instead of Mid the same way, there's also <b>InStrRev</b> that starts the search from the right.<br>
+<b>This is only for an example, if you can, use the Replace function to replace "*Invesco" with "Invesco". It's much easier.</b><br><br>
+<b><u>Text to columns</u></b><br>
+You might have a report like this: 123 Google Inc 123,000<br>
+You can turn this to 3 columns with the <b>Split function</b> (see Array)<br>
+<div class="code_snip">
+	cell = "123 Google Inc 123,000"<br>
+	sCell = Split(cell, " ")<br>
+	'The first number:<br>
+	share = sCell(0)<br>
+	'The last number:<br>
+	Value = sCell(UBound(sCell))<br>
+	'Fund name:<br>
+	fundname = ""<br>
+	For i = 1 To UBound(sCell) - 1 'Loop between the 2 numbers<br>
+	&emsp;fundname = fundname + " " + sCell(i)<br>
+	Next<br>
+	Range("A1").Value = Trim(fundname)<br>
+	Range("D1").Value = Value<br>
+	Range("E1").Value = share<br>
+</div><br><hr>
+<span class="titles">Replacing</span><br>
+Your leading zeroes disappeared when you used the Range.Replace function or you can't use it for other reasons:<br>
+Strict replace is done like this: <span class="codes"><b>Replace(</b>"000,123", ",", "")</span><br>
+Wildcards (*) don't work with this one, so if you want to remove part of the string (like everything before "*Invesco" or after "Fund*"), you:<br>
+Either write the string to a cell and replace with Range.Replace<br>
+Or you have to use the Left, Right, Mid, InStr, InStrRev functions or split and loop.<br><br>
+These are not all string functions. If you didn't find what you searched for here, try googling it.
+</div>
+
+<!--VBA Basics Subs/Functions-->
+<div class='inputfield' id='vbaBasics_functions_div' style='display:none;'>
+	<span class="titles">Procedure basics</span><br>
+	The 2 most important <a href="https://docs.microsoft.com/en-us/office/vba/language/how-to/create-a-procedure" target="_blank">procedures</a> are Functions and Subs.<br>
+	The <b>difference between a Function and a Sub</b> is that you can return a value with a function. You can also call a function on your sheets like inbuilt Excel functions such as vlookup.<br>
+	Procedure names follow the same rules as variable names. It's a great idea to start the procedure name with "ICM_" so you don't shadow any keyword in the language.<br>
+	Procedures start and end with either <span class="codes">Sub NAME() ... End Sub</span> or <span class="codes">Function NAME() ... End Function</span><br><br>
+
+	<span class="titles">Arguments</span><br>
+	Arguments are basically variables that you pass to a procedure between (). Unlike variables you don't declare them with "Dim", but you can define their type.<br>
+	To make an argument Optional, you can use the <b>"Optional"</b> keyword. An example is <span class="codes">Sub ICM_copy2RFL(<b>Optional</b> ICM_close As Boolean)</span> where you can pass a True/False value.<br>
+	If you want to call a function with a variable, you might want to use the <b>"ByVal"</b> keyword to not modify the original variable: <span class="codes">Sub ICM_copy2RFL(Optional <b>ByVal</b> ICM_close As Boolean)</span><br>
+	You can use this argument inside a procedure like: <span class="codes">If ICM_close Is False Then ...</span> etc.<br>
+	<b>Buttons on the Ribbon</b> only work if you use this argument: <span class="codes">Sub ICM_R_souper_filter(<u>Optional ByVal control As IRibbonControl</u>)</span><br><br>
+	
+	<span class="titles">Functions:</span><br>
+	You can define Functions as types: <span class="codes">Function myFunction(Arg As Long) <b>As Integer</b></span><br>
+	To return a value use the equal sign and the function name: <span class="codes">myFunction = 2049</span><br><br>
+	
+	<span class="titles">Comments & multiline functions:</span><br>
+	To write comments, start the line with <span class="codes">'</span><br>
+	To write a function/array in multiple lines, use <span class="codes">_</span><br>
+	<div class="code_snip">
+		arr = Array("one", _<br>
+		"two")
+	</div><br><br>
+	
+	<span class="titles">Calling procedures from other procedures:</span><br>
+	<b>ICMaddin</b>: To call a procedure that is also in the addin, <u>just write its name</u>: <span class="codes">ICM_addzeroes</span>; if it has arguments, use space & comma: <span class="codes">ICM_filter_exact "Funds", "A"</span><br>
+	<b>MQaddin</b>: If the procedure is in another addin, call it like this: <span class="codes"><b>Application.Run "ICMaddin.xlam!</b>ICM_addzeroes"</span> or <span class="codes"><b>Application.Run "ICMaddin.xlam!</b>ICM_filter_exact", "Funds", "A"</span><br>
+	<b>Inbuilt functions:</b> <span class="codes">Application.WorksheetFunction.sum(Range("D:D"))</span><br><br>
+	
+	<span class="titles">Storing a Function's returned value to a variable:</span><br>
+	There's an important difference between just calling a function and storing the returned value to a variable.<br>
+	When you call e.g. the Replace method, if you put the arguments in brackets, your code won't run:<br>
+	<span class="codes">[Range].Replace(What:="", etc.)</span> will give you an error.<br>
+	When you call the Find function, and you set the found range to a variable, the opposite is true:<br>
+	<span class="codes">Set var = [Range].Find What:= "" etc.</span> will give you an error.<br>
+	Although there's not a lot of functions in ICMaddin, storing their returned value in MQaddin is also different:<br>
+	<div class="code_snip">
+		Dim ICM_rate As Double<br>
+		ICM_rate = <b>Application.Run("ICMaddin.xlam!</b>ICM_currency_get_rate", "20200531", "CAD"<b>)</b><br>
+		Application.Run "ICMaddin.xlam!ICM_currency_calc", ICM_rate
+	</div><br>
+	Notice the difference between the 2 application runs: when you are not storing the returned value, you don't need brackets.<br><br>
+	
+	
+	<span class="titles">Procedure recommendations:</span><br>
+	You should <u>turn off screenupdating</u> and enable it before you end your main Sub/Function to speed up your code: <span class="codes">Application.ScreenUpdating = False ... Application.ScreenUpdating = True</span><br>
+	If you call multiple subprocedures, you should only turn it off in the MAIN procedure.<br>
+	It's great idea to start you procedures with error handling, so you can exit them before any of the rest of the code runs. To exit them, write: <span class="codes">Exit Sub</span> or <span class="codes">Exit Function</span><br>
+	For example see: ICM General/Copy to RawFileLoader.
+</div>
+
+<!--VBA Basics Timer-->
+<div class='inputfield' id='vbaBasics_timer_div' style='display:none;'>
+You can use a timer to measure how long your code runs.<br>
+It works like this:<br>
+<div class="code_snip">
+Dim StartingTime As Single<br>
+StartingTime = Timer<br>
+'<br>
+'any of your code here<br>
+'<br>
+MsgBox Timer - StartingTime
+</div>
+</div>
+
+<!--VBA Basics Variables-->
+<div class='inputfield' id='vbaBasics_variables_div' style='display:none;'>
+	<u>You should declare your variables at the start of your function/subroutine</u>, even though Excel has a default variable type (Variant).<br>
+	To declare a variable write: <u><span class="codes">Dim VariableName As VariableType</span></u><br>
+	The rules of <b><a href="https://docs.microsoft.com/en-us/office/vba/language/concepts/getting-started/visual-basic-naming-rules" target="_blank">naming your variable</a></b> (VariableName):<br>
+	<ul><li>It must be less than 255 characters</li><li>It must not begin with a number</li><li>You can't use a space, period (.), exclamation mark (!), or the characters @, &, $, # in the name.</li></ul><br>
+	The most important <b><a href="https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/data-type-summary" target="_blank">variable types (VariableType)</a></b> are:<br>
+	<ul>
+		<li>Boolean</li>
+		<li>Date</li>
+		<li>Double (floating number - e.g. 4.94)</li>
+		<li>Integer (-32,768 to 32,767)</li>
+		<li>Long (-2,147,483,648 to 2,147,483,648)</li>
+		<li>Object (e.g.: Range)</li>
+		<li>String (0 to 2 billion characters)</li>
+	</ul>
+	Some examples:<br>
+	<ul>
+		<li><span class="codes">Dim myBool As Boolean</span></li>
+		<li><span class="codes">Dim i As Integer</span></li>
+		<li><span class="codes">Dim myRange As Range</span></li>
+		<li><span class="codes">Dim myString As String</span></li>
+	</ul><br>
+	<b><u>To assign variable, use =</u></b><br>
+	<u>Each assignment must go in a new line.</u> Strings between quotes. Some examples:<br>
+	<ul>
+		<li><span class="codes">myBool = False</span></li>
+		<li><span class="codes">i = 1</span></li>
+		<li><span class="codes">myString = "Some text"</span></li>
+	</ul>
+	<u>To assign an Object, use Set:</u><br>
+	<ul><li><span class="codes">Set myRange = [Range]</span></li></ul><br>
+	Other things to keep in mind:<br>
+	<ul><li>If you assign a variable before declaring it, you will get an error.</li>
+		<li><u>Don't assign a variable multiple times</u>, or you will get an error (Dim myVar As String, Dim myVar As Integer)</li>
+		<li><u>Variables are not case sensitive</u> (myVar = myvar).</li></ul>
+</div>
+
+<!--VBA Basics Visuals-->
+<div class='inputfield' id='vbaBasics_visuals_div' style='display: none;'>
+	<span class="titles">Color cells:</span><br>
+	<u>After mapping conditional format on empty C cells</u>: <span class="codes">ICM_condform_mapping</span><br>
+	<u>Color cells1</u>: <span class="codes">[Range].Interior.ColorIndex = 35</span> <i>(default is 0=white)</i><br>
+	<u>Color cells2</u>: <span class="codes">[Range].Interior.Color = RGB(229, 225, 255)</span> <i>(default is xlNone)</i><br>
+	<u>Color cells until last non-empty H cell</u>: <span class="codes">ICM_status_color</span> <i>(you can pass your own color, e.g.: ICM_status_color 40)</i><br>
+	<br>
+	<a href="https://docs.microsoft.com/en-us/office/vba/api/excel.font(object)" target="_blank"><span class="titles">Font settings:</span></a><br>
+	<u>Change font</u>: <span class="codes">[Range].Font.Name = "Verdana"</span><br>
+	<u>Change font color</u>: <span class="codes">[Range].Font.ColorIndex = 3</span> <i>(Default is 1=black)</i><br>
+	<u>Change font to bold</u>: <span class="codes">[Range].Font.Bold = True</span> <i>(False is to unset)</i><br>
+	<br>
+	<span class="titles">Remove formats:</span><br>
+	<u>Change the view to normal</u>: <span class="codes">ActiveWindow.View = xlNormalView</span><br>
+	<u>Clear all Formats</u>: <span class="codes">[Range].ClearFormats</span><br>
+	<u>Clear Conditional Formatting</u>: <span class="codes">Cells.FormatConditions.Delete</span><br>
+	<u>Unfreeze cells</u>: <span class="codes">ActiveWindow.FreezePanes = False</span><br>
+	<u>Unmerge cells</u>: <span class="codes">[Range].UnMerge</span><br>
+	<u>Unwrap cells</u>: <span class="codes">[Range].WrapText = False</span><br>
+	<br>
+	<span class="titles">Scroll to A1</span><br>
+	<u>Scroll to column</u>: <span class="codes">ActiveWindow.ScrollColumn = 1</span><br>
+	<u>Scroll to row</u>: <span class="codes">ActiveWindow.ScrollRow = 1</span><br>
+	<br>
+	<span class="titles">Set columnwidth:</span><br>
+	<u>Autofit</u>: <span class="codes">Columns("A:H").AutoFit</span><br>
+	<u>Autowidth</u>: <span class="codes">ICM_autowidth</span>  <i>(autofit, but if a column's width is too short or wide, uses a min or max col width) This also works with only one column</i> (ICM_autowidth "A")<br>
+	<u>Set column width</u>: <span class="codes">Columns("A:H").ColumnWidth = 20</span><br>
+	<br>
+	<a href="https://docs.microsoft.com/en-us/office/vba/api/excel.cellformat" target="_blank"><b>Other cellformats</b></a>
+</div>
+
+<!--VBA Basics With-->
+<div class='inputfield' id='vbaBasics_with_div' style='display: none;'>
+You can set an object to work with if you don't want to reference it every time.<br>
+It's useful if you have like multiple replace statements that you perform on the same range, or you work with multiple sheets etc.<br>
+<div class="code_snip">
+	<b>With</b> Range("A1", "A100")<br>
+	&emsp;.Replace [etc.]<br>
+	&emsp;...<br>
+	&emsp;.Replace [etc.]<br>
+	<b>End With</b><br>
+</div><br>
+Instead of Range("A1", "A100").Replace [etc.]<br>
+Notice that this way you have to start your statements with period [.] if you would otherwise write a range reference before them.
+</div>
+
+<!--VBA Basics Workbook/Worksheet-->
+<div class='inputfield' id='vbaBasics_workbook_div' style='display: none;'>
+Just as Range Objects, <a href="https://docs.microsoft.com/en-us/office/vba/api/excel.workbook" target="_blank">Workbook</a> and 
+<a href="https://docs.microsoft.com/en-us/office/vba/api/excel.worksheet" target="_blank">Worksheet</a> objects have their own properties and methods.<br>
+These are the most important ones:<br><br>
+<span class="titles">Workbook object methods & properties:</span><br>
+<ul>
+	<li>Most important [Workbook] references: <b>Workbooks("RawFileLoader.xlsx"), ActiveWorkbook, ThisWorkbook</b></li>
+	<li><u>If more workbooks are open, activate the one specified:</u> <span class="codes">[Workbook]<b>.Activate</b></span></li>
+	<li><u>Close Workbook without saving:</u> <span class="codes">[Workbook]<b>.Close</b> Savechanges:=False</span></li>
+	<li><u>Get the name of the workbook:</u> <span class="codes">[Workbook]<b>.Name</span></b></li>
+</ul><br>
+<span class="titles">Worksheet object methods & properties:</span><br>
+<ul>
+	<li>Most important [Sheet] references: <b>Worksheets("Sheet1"), Sheets(1), ActiveSheet</b></li>
+	<li><u>If more worksheets are open, activate the one specified:</u> <span class="codes">[Sheet]<b>.Activate</span></b></li>
+	<li><u>Insert a new sheet left of the first sheet of RFL:</u> <span class="codes"><b>Sheets.Add</b> Before:=Workbooks("RawFileLoader.xlsx").Sheets(1)</span></li>
+	<li><u>Copy Sheet1 from ActiveWorkbook to RFL, left of first sheet:</u> <span class="codes">ActiveWorkbook.Sheets("Sheet1")<b>.Copy</b> Before:=Workbooks("RawFileLoader.xlsx").Sheets(1)</span></li>
+	<li><u>Get the name of the worksheet:</u> <span class="codes">[Sheet]<b>.Name</b></span></li>
+	<li><u>Change the name of the worksheet:</u> <span class="codes">[Sheet]<b>.Name = Left("Sheetname", 31)</b></span>
+	<li><u>Alternatively:</u> <span class="codes">[Sheet]<b>.Name = Right([var], 31)</b></span>
+</ul>
+Sheet names can't be longer than 31 characters, that's why you should use the Left/Right string function.
+</div>
+
+<!--VBA videos-->
+<div class='inputfield' id='vba_videos_div' style='display: none;'>
+	<a href="https://web.microsoftstream.com/video/6cbab667-cb85-4101-b47b-f9a3280a0c64" target="_blank">I. Basics</a><br>
+	<ul>
+		<li>00-06: What is VBA</li>
+		<li>06-13: VBA Editor & ICMaddin  (modules, procedures, procedure calls)</li>
+		<li>13-16: Subroutines vs Functions</li>
+		<li>16-19: MQaddin, ScreenUpdating</li>
+		<li>19-20: MessageBoxes, InputBoxes</li>
+		<li>20-28: Range references (range hierarchy, range properties, visuals)</li>
+		<li>28-29: Excel formulas to sheet (Sum)</li>
+		<li>29-35: Variables</li>
+		<li>35-47: Using ICMaddin macros for creating your own code (swapcol internal)</li>
+		<li>47-49: Replace</li>
+		<li>49-56: Using ICMaddin macros for creating your own code (bulk swapcols)</li>
+		<li>56-: Sheetname change</li>
+	</ul>
+	<a href="https://web.microsoftstream.com/video/97351a03-7f31-4f58-812d-0f38097f437a" target="_blank">II. Find, Conditional statements, Loops, Error handling, Debugging, Dynamic Range</a><br>
+	<ul>
+		<li>00-02: Saving ICMaddin modifications</li>
+		<li>02-06: Adding new modules, case sensitivity</li>
+		<li>06-12: Macros to shortcuts</li>
+		<li>15-17: Stopping the code for debugging</li>
+		<li>17-19: Copying a range to another without swap column</li>
+		<li>19-28: Using dynamic range to do it faster</li>
+		<li>If-Else-ElseIf</li>
+		<ul>
+		<li>28-33: If condition to prevent running a macro if a condition isn't met</li>
+		<li>33-37: If-else, elseIf so different macros can run with the same button</li>
+		<li>37-39: If... And/Or for multiple conditions</li>
+		<li>39-40: Select Case</li>
+		</ul>
+		<li>Find</li>
+		<ul>
+		<li>40-44: Using Find</li>
+		<li>43-45: Assign the cell that was found to a Range variable</li>
+		<li>45-47: Using Find & dynamic range to find a value & delete rows from it to the 1st empty cell</li>
+		<li>47-49: Finding 2 cells and clearing rows between them</li>
+		</ul>
+		<li>Loops, Find Error Handling</li>
+		<ul>
+		<li>49-50: For loops for repeating this process x times</li>
+		<li>50-53: Error handling for Find</li>
+		</ul>
+		<li>53-55: Using Find & dynamic range to find a value & delete rows from it to the 1st empty cell (2)</li>
+		<li>59-: Offset</li>
+	</ul>
+	<a href="https://web.microsoftstream.com/video/a6bfa1e7-1e18-42c0-83f3-cf4e45a34a87" target="_blank">III. Autofilter, For Loops, Conditional statements</a><br>
+	<ul>
+		<li>01-02: Using the "Like" operator in conditions</li>
+		<li>02-03: Using the "Not" operator with the "Like"</li>
+		<li>03-11: Repeating what we learned this far</li>
+		<li>12-13: On error "Debug" only pauses script execution</li>
+		<li>13-20: Using "autofilter" to clear negative values</li>
+		<li>20-27: Using a "For Each loop" & "if condition" to clear negative values</li>
+		<ul>22-23: Assign "dynamic range" to variable 2 ways</ul>
+		<ul>25-26: Writing if conditions in one line</ul>
+		<li>27-30: For [var] = .. To .. Loop - to clear negative values</li>
+		<li>30-33: For loops-if condition - where the condition does something to another cell</li>
+		<li>34-37: "Replace" removes leading zeroes</li>
+		<li>37-41: If a cell contains a string - do something to another cell in a loop</li>
+		<li>41-43: Using multiple conditions in a loop, "replace" on one cell</li>
+		<li>43-46: Using String functions (to remove part of a string)</li>
+		<li>46-47: Using Numberformat so Excel doesn't remove leading zeroes</li>
+		<li>52-57: Using and/or conditions in a loop (if B cell is empty & A contains something)</li>
+	</ul>
+	<a href="https://web.microsoftstream.com/video/a320f54c-706e-4834-a20e-9d84473ea7eb" target="_blank">IV. Do Loops, Sorting, List-arrays, String functions</a><br>
+	<ul>
+		<li>00-08: An example for why declaring your variables as types is recommended and why you can't multiply a range without a loop</li>
+		<li>08-18: Multiline doesn't copy ISIN from upper row, how can it be solved with a loop without modifying the multiline macro</li>
+		<li>18-24: An example for Canadian sheet reorganization</li>
+		<li>24-33: "Do Until/Do While loops" showed on multiline macros</li>
+		<li>33-38: String functions and Excel functions in loops</li>
+		<li>38-40: How to tell if a column contains anything?</li>
+		<li>40-48: Sorting</li>
+		<li>48-58: Using 1 dimensional arrays (lists) instead of multiple Or/And if conditions</li>
+	</ul>
+	<a href="https://web.microsoftstream.com/video/b164e8e7-7fb6-48c0-b450-49dd08e09a9a" target="_blank">V. List-arrays, Reorganizing sheet instead of clearing</a><br>
+	<ul>
+		<li>00-12: Delete rows where a cell contains a value with lists and nested loops</li>
+		<li>04-05: The watch window for seeing an array's content</li>
+		<li>13-17: Use a list & loop with "Replace"</li>
+		<li>17-24: Reorganize these rows instead of deleting them manually</li>
+		<li>24-40: Do the same with VBA sort & loop</li>
+		<li>31-36: Insert rows using find</li>
+		<li>40-53: Loading the sheet into array to make the process faster</li>
+		<ul>
+			<li>42-46: How "bulk swapcolumns" work</li>
+			<li>46-53: Prepare for sorting in an array</li>
+		</ul>
+	</ul>
+	<a href="https://web.microsoftstream.com/video/12a88239-57c8-459f-8a9f-b50acb5cef97" target="_blank">VI. Database logic, using 2 dimensional arrays</a><br>
+	<ul>
+		<li>00-07: Open workbooks with VBA & copy their content</li>
+		<li>07-12: Delete rows based on an external workbook's content with loop</li>
+		<li>12-13: Do the same with the addin's hidden sheet</li>
+		<li>13-20: Replace cell contents with loop, where "what" and "with" is on an external sheet</li>
+		<li>20-26: Do the same, but the external sheet is loaded to an array</li>
+		<li>26-30: Do the same but all sheets are loaded into arrays</li>
+		<li>30-34: Load a csv into array with our Function</li>
+		<li>34-42: Dictionaries, the fastest way to replace based on external values</li>
+		<li>42-46: Arrays are also necessary for getting data from the database</li>
+	</ul>
+</div>
+
+</div> <!--End div_above_code-->
+<!--VBA Macro Code here-->
+<div id='yourcode' style='display: block;'>Here's your code:</div>
+<div id='code_div'> </div>
+
+</body>
+</html>

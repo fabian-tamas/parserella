@@ -1,0 +1,50 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <div class="container">
+    <div class="row">
+      <div class="col">
+        <div class="jumbotron jumbotron-fluid text-center mt-0">
+          <div class="container">
+            <h1 class="display-4">Parserella</h1>
+            <h6><b>Version 1.2</b></h6>
+            <p class="lead">The neighbourly NPORT-P Report Parser<br>by Tamás Fábián</p>
+
+
+
+
+
+            <p class="lead"><b>Usage:</b>
+
+                <br>Just paste in the link for the xml file and click on Parse!
+                <br>
+            </p>
+
+            <p align=left>
+
+              <form class="form" action="/results">
+                <input class="form-control mr-sm-2" type="text" placeholder="Enter URL..." name="url">  <br>           
+                <button class="btn btn-primary my-2 my-sm-0" type="submit">Parse!</button>
+              </form>
+            </p>
+            <p align=left>
+            <br><br><u>Changelog:</u>
+            <br><br><b>v.1.2 [2020-01-09]</b>
+            <br>Now it is downloading and rendering the results in RawFielLoader upload format
+            <br>Added Parse bar to Results page, now you don't have to go back a page to parse another NPORT-P xml link
+            <br><br><b>v.1.1 [2020-01-07]</b>
+            <br>Any trailing space is removed from url, so no error is given when link is pasted in
+            <br>Saved filename contains report type, fund name and report date
+            <br><br><b>v.1.0 [2020-01-07]</b>
+            <br>Initial Release, wrapped the original nportp.py v2.0 script into Flask
+            <br>
+
+            </p>
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
