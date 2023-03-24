@@ -71,42 +71,6 @@ def wiki():
     return app.send_static_file('wiki/mdwiki.html')
 
 
-@app.route('/ekonyv')
-def ekonyv():
-
-    import paramiko
-
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-    ssh.connect(hostname='nl85.seedit4.me', username='seedit4me', password='Alternis0414', port=2099, banner_timeout=2000)
-
-    ftp_client = ssh.open_sftp()
-
-    ftp_client.get('cron-ekonyv/konyvmolykepzo.txt', 'konyvmolykepzo.txt')
-
-    file1 = open('konyvmolykepzo.txt', 'r', encoding="utf-8")
-    lista = file1.readlines()
-
-    darabos = []
-
-    for listasor in lista:
-        currentline = listasor.split(",")
-        darabos.append(currentline)
-
-    file1.close()
-
-    os.remove('konyvmolykepzo.txt')
-
-    ftp_client.close()
-    ssh.close()
-
-    darabos.sort()
-
-
-    return render_template('ekonyv.html', darabos=darabos)
-
-
 
 @app.route('/scrape')
 def scrape():
